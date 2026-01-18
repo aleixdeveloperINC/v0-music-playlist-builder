@@ -20,7 +20,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    const redirectUri = `${origin}/api/auth/callback`;
+    let redirectUri;
+    if (process.env.NODE_ENV === "development") {
+      redirectUri = `http://127.0.0.1:3000/api/auth/callback`;
+    } else {
+      redirectUri = `${origin}/api/auth/callback`;
+    }
     const tokenData = await getSpotifyToken(code, redirectUri);
     const profile = await getUserProfile(tokenData.access_token);
 
