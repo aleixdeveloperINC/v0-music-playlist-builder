@@ -4,7 +4,7 @@ import type { Track } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Loader2, Activity, Zap, Music2 } from "lucide-react";
+import { Loader2, Activity, Zap, Music2, ArrowUp, ArrowDown } from "lucide-react";
 
 interface TrackListProps {
   tracks: Track[];
@@ -12,6 +12,9 @@ interface TrackListProps {
   onToggleTrack: (trackId: string) => void;
   showCheckboxes?: boolean;
   onFetchAudioFeatures?: (trackId: string) => void;
+  sortColumn?: keyof Track;
+  sortDirection?: "asc" | "desc";
+  onSort?: (column: keyof Track) => void;
 }
 
 function formatDuration(ms: number) {
@@ -83,12 +86,69 @@ function AudioFeatures({
   );
 }
 
+function SortIcon({
+  column,
+  currentColumn,
+  direction,
+}: {
+  column: keyof Track;
+  currentColumn: keyof Track;
+  direction: "asc" | "desc";
+}) {
+  if (column !== currentColumn) {
+    return null;
+  }
+  return direction === "asc" ? (
+    <ArrowUp className="w-3 h-3" />
+  ) : (
+    <ArrowDown className="w-3 h-3" />
+  );
+}
+
+function TableHeader({
+  label,
+  column,
+  currentColumn,
+  sortDirection,
+  onClick,
+}: {
+  label: string;
+  column: keyof Track;
+  currentColumn: keyof Track;
+  sortDirection?: "asc" | "desc";
+  onClick?: () => void;
+}) {
+  const isActive = column === currentColumn;
+
+  return (
+    <th
+      className={cn(
+        "px-3 py-2 text-left text-xs font-medium uppercase tracking-wider",
+        onClick && "cursor-pointer hover:bg-accent select-none"
+      )}
+      onClick={onClick}
+    >
+      <div className="flex items-center gap-1">
+        {label}
+        <SortIcon
+          column={column}
+          currentColumn={currentColumn}
+          direction={sortDirection || "asc"}
+        />
+      </div>
+    </th>
+  );
+}
+
 export function TrackList({
   tracks,
   selectedTracks,
   onToggleTrack,
   showCheckboxes = true,
   onFetchAudioFeatures,
+  sortColumn,
+  sortDirection,
+  onSort,
 }: TrackListProps) {
   if (tracks.length === 0) {
     return (
@@ -99,58 +159,113 @@ export function TrackList({
   }
 
   return (
-    <div className="space-y-1">
-      {tracks.map((track) => (
-        <div
-          key={track.id}
-          onClick={() => showCheckboxes && onToggleTrack(track.id)}
-          className={cn(
-            "flex items-center gap-3 p-3 rounded-lg transition-colors",
-            showCheckboxes && "cursor-pointer hover:bg-accent",
-            selectedTracks.has(track.id) && "bg-accent"
-          )}
-        >
-          {showCheckboxes && (
-            <Checkbox
-              checked={selectedTracks.has(track.id)}
-              onCheckedChange={() => onToggleTrack(track.id)}
-              onClick={(e) => e.stopPropagation()}
+    <div className="flex-1 overflow-auto">
+      <table className="w-full">
+        <thead className="sticky top-0 bg-background border-b border-border">
+          <tr>
+            {showCheckboxes && (
+              <th className="px-3 py-2 w-8">
+                <span className="sr-only">Select</span>
+              </th>
+            )}
+            <TableHeader
+              label="Cover"
+              column="name"
+              currentColumn={sortColumn || "name"}
             />
-          )}
-
-          {track.albumImage ? (
-            <img
-              src={track.albumImage || "/placeholder.svg"}
-              alt={track.album}
-              className="w-12 h-12 rounded object-cover"
+            <TableHeader
+              label="Title"
+              column="name"
+              currentColumn={sortColumn || "name"}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("name")}
             />
-          ) : (
-            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground text-xs">No img</span>
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground truncate">{track.name}</p>
-            <p className="text-sm text-muted-foreground truncate">{track.artists}</p>
-          </div>
-
-          <div className="hidden md:block text-sm text-muted-foreground w-32 truncate">
-            {track.album}
-          </div>
-
-          <div className="w-40 flex-shrink-0">
-            <AudioFeatures
-              track={track}
-              onFetch={onFetchAudioFeatures}
+            <TableHeader
+              label="Artist"
+              column="artists"
+              currentColumn={sortColumn || "name"}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("artists")}
             />
-          </div>
-
-          <div className="text-sm text-muted-foreground w-12 text-right">
-            {formatDuration(track.duration)}
-          </div>
-        </div>
-      ))}
+            <TableHeader
+              label="Album"
+              column="album"
+              currentColumn={sortColumn || "name"}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("album")}
+            />
+            <TableHeader
+              label="Audio Features"
+              column="tempo"
+              currentColumn={sortColumn || "name"}
+            />
+            <TableHeader
+              label="Duration"
+              column="duration"
+              currentColumn={sortColumn || "name"}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("duration")}
+            />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {tracks.map((track) => (
+            <tr
+              key={track.id}
+              onClick={() => showCheckboxes && onToggleTrack(track.id)}
+              className={cn(
+                "transition-colors",
+                showCheckboxes && "cursor-pointer hover:bg-accent",
+                selectedTracks.has(track.id) && "bg-accent/50"
+              )}
+            >
+              {showCheckboxes && (
+                <td className="px-3 py-3">
+                  <Checkbox
+                    checked={selectedTracks.has(track.id)}
+                    onCheckedChange={() => onToggleTrack(track.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </td>
+              )}
+              <td className="px-3 py-3">
+                {track.albumImage ? (
+                  <img
+                    src={track.albumImage || "/placeholder.svg"}
+                    alt={track.album}
+                    className="w-10 h-10 rounded object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                    <span className="text-muted-foreground text-xs">No img</span>
+                  </div>
+                )}
+              </td>
+              <td className="px-3 py-3">
+                <p className="font-medium text-foreground truncate max-w-[200px]">
+                  {track.name}
+                </p>
+              </td>
+              <td className="px-3 py-3">
+                <p className="text-sm text-muted-foreground truncate max-w-[150px]">
+                  {track.artists}
+                </p>
+              </td>
+              <td className="px-3 py-3">
+                <p className="text-sm text-muted-foreground truncate max-w-[150px]">
+                  {track.album}
+                </p>
+              </td>
+              <td className="px-3 py-3">
+                <AudioFeatures track={track} onFetch={onFetchAudioFeatures} />
+              </td>
+              <td className="px-3 py-3 text-sm text-muted-foreground text-right whitespace-nowrap">
+                {formatDuration(track.duration)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
