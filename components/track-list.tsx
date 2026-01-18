@@ -33,29 +33,32 @@ function AudioFeatures({
   const hasFeatures = track.tempo !== null;
 
   if (!hasFeatures && !onFetch) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground text-xs">—</span>;
   }
 
   if (!hasFeatures) {
     return onFetch ? (
       <Button
-        variant="ghost"
+        variant="outline"
         size="sm"
         onClick={(e) => {
           e.stopPropagation();
           onFetch(track.id);
         }}
         disabled={track.audioFeaturesLoading}
-        className="h-6 px-2 text-xs"
+        className="h-7 px-3 text-xs"
       >
         {track.audioFeaturesLoading ? (
-          <Loader2 className="w-3 h-3 animate-spin" />
+          <>
+            <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+            Loading...
+          </>
         ) : (
-          <Activity className="w-3 h-3" />
+          "Get features"
         )}
       </Button>
     ) : (
-      <span className="text-muted-foreground">—</span>
+      <span className="text-muted-foreground text-xs">—</span>
     );
   }
 
