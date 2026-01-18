@@ -28,7 +28,7 @@ export async function getSpotifyToken(code: string, redirectUri: string) {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(
-        `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+        `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`,
       ).toString("base64")}`,
     },
     body: new URLSearchParams({
@@ -51,7 +51,7 @@ export async function refreshSpotifyToken(refreshToken: string) {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(
-        `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+        `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`,
       ).toString("base64")}`,
     },
     body: new URLSearchParams({
@@ -67,7 +67,11 @@ export async function refreshSpotifyToken(refreshToken: string) {
   return response.json();
 }
 
-export async function searchTracks(accessToken: string, query: string, limit = 50) {
+export async function searchTracks(
+  accessToken: string,
+  query: string,
+  limit = 50,
+) {
   const params = new URLSearchParams({
     q: query,
     type: "track",
@@ -85,14 +89,33 @@ export async function searchTracks(accessToken: string, query: string, limit = 5
   return response.json();
 }
 
-export async function getAudioFeatures(accessToken: string, trackIds: string[]) {
+export async function getAudioFeatures(
+  accessToken: string,
+  trackIds: string[],
+) {
   const response = await fetch(
     `${SPOTIFY_API_BASE}/audio-features?ids=${trackIds.join(",")}`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
+    { headers: { Authorization: `Bearer ${accessToken}` } },
   );
 
   if (!response.ok) {
     throw new Error("Failed to get audio features");
+  }
+
+  return response.json();
+}
+
+export async function getAudioFeature(
+  accessToken: string,
+  trackId: string,
+) {
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/audio-features/${trackId}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to get audio feature");
   }
 
   return response.json();
@@ -111,9 +134,12 @@ export async function getUserProfile(accessToken: string) {
 }
 
 export async function getUserPlaylists(accessToken: string, limit = 50) {
-  const response = await fetch(`${SPOTIFY_API_BASE}/me/playlists?limit=${limit}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/me/playlists?limit=${limit}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Failed to get playlists");
@@ -122,10 +148,16 @@ export async function getUserPlaylists(accessToken: string, limit = 50) {
   return response.json();
 }
 
-export async function getPlaylistTracks(accessToken: string, playlistId: string) {
-  const response = await fetch(`${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+export async function getPlaylistTracks(
+  accessToken: string,
+  playlistId: string,
+) {
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Failed to get playlist tracks");
@@ -138,16 +170,19 @@ export async function createPlaylist(
   accessToken: string,
   userId: string,
   name: string,
-  description?: string
+  description?: string,
 ) {
-  const response = await fetch(`${SPOTIFY_API_BASE}/users/${userId}/playlists`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/users/${userId}/playlists`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, description, public: false }),
     },
-    body: JSON.stringify({ name, description, public: false }),
-  });
+  );
 
   if (!response.ok) {
     throw new Error("Failed to create playlist");
@@ -159,16 +194,19 @@ export async function createPlaylist(
 export async function addTracksToPlaylist(
   accessToken: string,
   playlistId: string,
-  trackUris: string[]
+  trackUris: string[],
 ) {
-  const response = await fetch(`${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ uris: trackUris }),
     },
-    body: JSON.stringify({ uris: trackUris }),
-  });
+  );
 
   if (!response.ok) {
     throw new Error("Failed to add tracks");
@@ -180,16 +218,19 @@ export async function addTracksToPlaylist(
 export async function removeTracksFromPlaylist(
   accessToken: string,
   playlistId: string,
-  trackUris: string[]
+  trackUris: string[],
 ) {
-  const response = await fetch(`${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tracks: trackUris.map((uri) => ({ uri })) }),
     },
-    body: JSON.stringify({ tracks: trackUris.map((uri) => ({ uri })) }),
-  });
+  );
 
   if (!response.ok) {
     throw new Error("Failed to remove tracks");
@@ -202,16 +243,22 @@ export async function reorderPlaylistTracks(
   accessToken: string,
   playlistId: string,
   rangeStart: number,
-  insertBefore: number
+  insertBefore: number,
 ) {
-  const response = await fetch(`${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        range_start: rangeStart,
+        insert_before: insertBefore,
+      }),
     },
-    body: JSON.stringify({ range_start: rangeStart, insert_before: insertBefore }),
-  });
+  );
 
   if (!response.ok) {
     throw new Error("Failed to reorder tracks");
@@ -224,7 +271,7 @@ export async function updatePlaylistDetails(
   accessToken: string,
   playlistId: string,
   name: string,
-  description?: string
+  description?: string,
 ) {
   const response = await fetch(`${SPOTIFY_API_BASE}/playlists/${playlistId}`, {
     method: "PUT",

@@ -2,13 +2,16 @@
 
 import type { Track } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Loader2, Activity } from "lucide-react";
 
 interface TrackListProps {
   tracks: Track[];
   selectedTracks: Set<string>;
   onToggleTrack: (trackId: string) => void;
   showCheckboxes?: boolean;
+  onFetchBpm?: (trackId: string) => void;
 }
 
 function formatDuration(ms: number) {
@@ -22,6 +25,7 @@ export function TrackList({
   selectedTracks,
   onToggleTrack,
   showCheckboxes = true,
+  onFetchBpm,
 }: TrackListProps) {
   if (tracks.length === 0) {
     return (
@@ -73,7 +77,26 @@ export function TrackList({
           </div>
 
           <div className="text-sm font-medium text-spotify w-16 text-right">
-            {track.bpm ? `${track.bpm} BPM` : "—"}
+            {track.bpm ? `${track.bpm} BPM` : onFetchBpm ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFetchBpm(track.id);
+                }}
+                disabled={track.bpmLoading}
+                className="h-6 px-2 text-xs"
+              >
+                {track.bpmLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Activity className="w-3 h-3" />
+                )}
+              </Button>
+            ) : (
+              "—"
+            )}
           </div>
 
           <div className="text-sm text-muted-foreground w-12 text-right">

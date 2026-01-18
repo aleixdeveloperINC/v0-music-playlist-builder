@@ -7,6 +7,7 @@ export interface Track {
   albumImage?: string;
   duration: number;
   bpm: number | null;
+  bpmLoading: boolean;
 }
 
 export interface Playlist {
