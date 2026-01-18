@@ -37,6 +37,7 @@ export function SearchPanel({
   const [sortColumn, setSortColumn] = useState<keyof Track>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const handleSearch = useCallback(
     async (query: string) => {
@@ -126,15 +127,23 @@ export function SearchPanel({
     });
   }, [tracks, sortColumn, sortDirection]);
 
-  const totalPages = Math.ceil(sortedTracks.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(sortedTracks.length / pageSize);
   const paginatedTracks = sortedTracks.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  const getStartIndex = () => (currentPage - 1) * pageSize + 1;
+  const getEndIndex = () => Math.min(currentPage * pageSize, sortedTracks.length);
 
   return (
     <Card className="h-full flex flex-col">
@@ -209,9 +218,29 @@ export function SearchPanel({
               />
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
-                  <span className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Showing {getStartIndex()}-{getEndIndex()} of {sortedTracks.length}
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          {pageSize} per page
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        {PAGE_SIZE_OPTIONS.map((size) => (
+                          <DropdownMenuItem
+                            key={size}
+                            onClick={() => handlePageSizeChange(size)}
+                            className={pageSize === size ? "bg-accent" : ""}
+                          >
+                            {size} per page
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
