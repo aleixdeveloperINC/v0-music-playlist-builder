@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-const ITEMS_PER_PAGE = 20;
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 interface SearchPanelProps {
   playlists: Playlist[];

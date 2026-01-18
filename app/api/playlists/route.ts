@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getUserPlaylists, createPlaylist, getUserProfile } from "@/lib/spotify";
+import {
+  getUserPlaylists,
+  createPlaylist,
+  getUserProfile,
+} from "@/lib/spotify";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -15,25 +19,30 @@ export async function GET() {
     const playlists = await getUserPlaylists(session.accessToken);
 
     return NextResponse.json({
-      playlists: playlists.items.map((p: {
-        id: string;
-        name: string;
-        description: string;
-        images: { url: string }[];
-        tracks: { total: number };
-        owner: { id: string };
-      }) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        image: p.images[0]?.url,
-        trackCount: p.tracks.total,
-        ownerId: p.owner.id,
-      })),
+      playlists: playlists.items.map(
+        (p: {
+          id: string;
+          name: string;
+          description: string;
+          images: { url: string }[];
+          tracks: { total: number };
+          owner: { id: string };
+        }) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          image: p.images?.[0]?.url,
+          trackCount: p.tracks?.total,
+          ownerId: p.owner.id,
+        }),
+      ),
     });
   } catch (error) {
     console.error("Playlists error:", error);
-    return NextResponse.json({ error: "Failed to get playlists" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to get playlists" },
+      { status: 500 },
+    );
   }
 }
 
@@ -58,7 +67,7 @@ export async function POST(request: Request) {
       session.accessToken,
       profile.id,
       name,
-      description
+      description,
     );
 
     return NextResponse.json({
@@ -73,6 +82,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Create playlist error:", error);
-    return NextResponse.json({ error: "Failed to create playlist" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create playlist" },
+      { status: 500 },
+    );
   }
 }
