@@ -6,8 +6,10 @@ export interface Track {
   album: string;
   albumImage?: string;
   duration: number;
-  bpm: number | null;
-  bpmLoading: boolean;
+  tempo: number | null;
+  danceability: number | null;
+  energy: number | null;
+  audioFeaturesLoading: boolean;
 }
 
 export interface Playlist {

@@ -20,7 +20,9 @@ export async function GET(
     const audioFeature = await getAudioFeature(session.accessToken, trackId);
 
     return NextResponse.json({
-      bpm: audioFeature.tempo ? Math.round(audioFeature.tempo) : null,
+      tempo: audioFeature.tempo ? Math.round(audioFeature.tempo) : null,
+      danceability: audioFeature.danceability ? Math.round(audioFeature.danceability * 100) : null,
+      energy: audioFeature.energy ? Math.round(audioFeature.energy * 100) : null,
     });
   } catch (error) {
     console.error("Audio feature error:", error);

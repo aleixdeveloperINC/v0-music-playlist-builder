@@ -36,8 +36,10 @@ export async function GET(request: Request) {
         album: track.album.name,
         albumImage: track.album.images[0]?.url,
         duration: track.duration_ms,
-        bpm: null,
-        bpmLoading: false,
+        tempo: null,
+        danceability: null,
+        energy: null,
+        audioFeaturesLoading: false,
       }),
     );
 
