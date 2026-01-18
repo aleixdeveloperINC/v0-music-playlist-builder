@@ -15,7 +15,6 @@ export async function GET() {
 
     if (Date.now() > session.expiresAt - 60000) {
       const tokenData = await refreshSpotifyToken(session.refreshToken);
-
       session.accessToken = tokenData.access_token;
       session.expiresAt = Date.now() + tokenData.expires_in * 1000;
       if (tokenData.refresh_token) {
