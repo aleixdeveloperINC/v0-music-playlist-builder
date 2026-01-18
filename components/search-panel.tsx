@@ -37,31 +37,28 @@ export function SearchPanel({
   const [sortColumn, setSortColumn] = useState<keyof Track>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
-  const handleSearch = useCallback(
-    async (query: string) => {
-      setIsSearching(true);
-      setHasSearched(true);
-      setCurrentPage(1);
-      try {
-        const params = new URLSearchParams({ q: query });
+  const handleSearch = useCallback(async (query: string) => {
+    setIsSearching(true);
+    setHasSearched(true);
+    setCurrentPage(1);
+    try {
+      const params = new URLSearchParams({ q: query });
 
-        const response = await fetch(`/api/search?${params}`);
-        const data = await response.json();
+      const response = await fetch(`/api/search?${params}`);
+      const data = await response.json();
 
-        if (data.tracks) {
-          setTracks(data.tracks);
-          setSelectedTracks(new Set());
-        }
-      } catch (error) {
-        console.error("Search error:", error);
-      } finally {
-        setIsSearching(false);
+      if (data.tracks) {
+        setTracks(data.tracks);
+        setSelectedTracks(new Set());
       }
-    },
-    []
-  );
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
 
   const handleToggleTrack = useCallback((trackId: string) => {
     setSelectedTracks((prev) => {
@@ -95,6 +92,42 @@ export function SearchPanel({
       setIsAdding(false);
     }
   };
+
+  const handleFetchAudioFeatures = useCallback(async (trackId: string) => {
+    setTracks((prev) =>
+      prev.map((t) =>
+        t.id === trackId ? { ...t, audioFeaturesLoading: true } : t
+      )
+    );
+
+    try {
+      const response = await fetch(`/api/audio-features/${trackId}`);
+      const data = await response.json();
+
+      if (data.tempo !== undefined) {
+        setTracks((prev) =>
+          prev.map((t) =>
+            t.id === trackId
+              ? {
+                  ...t,
+                  tempo: data.tempo,
+                  danceability: data.danceability,
+                  energy: data.energy,
+                  audioFeaturesLoading: false,
+                }
+              : t
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Failed to fetch audio features:", error);
+      setTracks((prev) =>
+        prev.map((t) =>
+          t.id === trackId ? { ...t, audioFeaturesLoading: false } : t
+        )
+      );
+    }
+  }, []);
 
   const handleSort = (column: keyof Track) => {
     if (sortColumn === column) {
@@ -130,7 +163,7 @@ export function SearchPanel({
   const totalPages = Math.ceil(sortedTracks.length / pageSize);
   const paginatedTracks = sortedTracks.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const handlePageChange = (page: number) => {
@@ -143,7 +176,8 @@ export function SearchPanel({
   };
 
   const getStartIndex = () => (currentPage - 1) * pageSize + 1;
-  const getEndIndex = () => Math.min(currentPage * pageSize, sortedTracks.length);
+  const getEndIndex = () =>
+    Math.min(currentPage * pageSize, sortedTracks.length);
 
   return (
     <Card className="h-full flex flex-col">
@@ -215,12 +249,14 @@ export function SearchPanel({
                 sortColumn={sortColumn}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                onFetchAudioFeatures={handleFetchAudioFeatures}
               />
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
-                      Showing {getStartIndex()}-{getEndIndex()} of {sortedTracks.length}
+                      Showing {getStartIndex()}-{getEndIndex()} of{" "}
+                      {sortedTracks.length}
                     </span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
