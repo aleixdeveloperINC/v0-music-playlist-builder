@@ -48,7 +48,7 @@ export function PlaylistEditor({ playlist, onUpdate }: PlaylistEditorProps) {
 
   useEffect(() => {
     fetchTracks();
-  }, [fetchTracks]);
+  }, [fetchTracks, playlist.trackCount]);
 
   useEffect(() => {
     setEditName(playlist.name);
