@@ -10,10 +10,15 @@ import { Search, Loader2 } from "lucide-react";
 interface SearchFormProps {
   onSearch: (query: string) => void;
   isLoading: boolean;
+  initialQuery?: string;
 }
 
-export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
-  const [query, setQuery] = useState("");
+export function SearchForm({
+  onSearch,
+  isLoading,
+  initialQuery = "",
+}: SearchFormProps) {
+  const [query, setQuery] = useState(initialQuery);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

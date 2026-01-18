@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SearchForm } from "./search-form";
 import { TrackList } from "./track-list";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,8 @@ export function SearchPanel({
   onAddToPlaylist,
   onCreatePlaylist,
 }: SearchPanelProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [isSearching, setIsSearching] = useState(false);
@@ -39,10 +42,23 @@ export function SearchPanel({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const handleSearch = useCallback(async (query: string) => {
+  const initialQuery = searchParams.get("q") || "";
+
+  useEffect(() => {
+    if (initialQuery) {
+      handleSearch(initialQuery, false);
+    }
+  }, []);
+
+  const handleSearch = useCallback(async (query: string, updateUrl = true) => {
     setIsSearching(true);
     setHasSearched(true);
     setCurrentPage(1);
+
+    if (updateUrl) {
+      router.replace(`?q=${encodeURIComponent(query)}`, { scroll: false });
+    }
+
     try {
       const params = new URLSearchParams({ q: query });
 
@@ -58,7 +74,7 @@ export function SearchPanel({
     } finally {
       setIsSearching(false);
     }
-  }, []);
+  }, [router]);
 
   const handleToggleTrack = useCallback((trackId: string) => {
     setSelectedTracks((prev) => {
@@ -185,7 +201,11 @@ export function SearchPanel({
         <CardTitle className="text-lg">Search Tracks</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-        <SearchForm onSearch={handleSearch} isLoading={isSearching} />
+        <SearchForm
+          onSearch={handleSearch}
+          isLoading={isSearching}
+          initialQuery={initialQuery}
+        />
 
         {hasSearched && sortedTracks.length > 0 && (
           <div className="flex items-center justify-between border-b border-border pb-3">
