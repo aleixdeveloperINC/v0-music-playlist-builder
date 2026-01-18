@@ -4,19 +4,16 @@ import type { Playlist } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Plus, Music } from "lucide-react";
+import Link from "next/link";
 
 interface PlaylistSelectorProps {
   playlists: Playlist[];
-  selectedPlaylistId: string | null;
-  onSelectPlaylist: (playlistId: string) => void;
   onCreatePlaylist: () => void;
   isLoading: boolean;
 }
 
 export function PlaylistSelector({
   playlists,
-  selectedPlaylistId,
-  onSelectPlaylist,
   onCreatePlaylist,
   isLoading,
 }: PlaylistSelectorProps) {
@@ -44,15 +41,11 @@ export function PlaylistSelector({
       </Button>
 
       {playlists.map((playlist) => (
-        <button
+        <Link
           key={playlist.id}
-          type="button"
-          onClick={() => onSelectPlaylist(playlist.id)}
+          href={`/playlists/${playlist.id}`}
           className={cn(
-            "w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left",
-            selectedPlaylistId === playlist.id
-              ? "bg-accent border border-spotify/50"
-              : "hover:bg-accent border border-transparent"
+            "flex items-center gap-3 p-2 rounded-lg transition-colors text-left block hover:bg-accent border border-transparent"
           )}
         >
           {playlist.image ? (
@@ -72,7 +65,7 @@ export function PlaylistSelector({
               {playlist.trackCount} tracks
             </p>
           </div>
-        </button>
+        </Link>
       ))}
 
       {playlists.length === 0 && (

@@ -157,7 +157,6 @@ export function App() {
               playlists={playlists}
               isLoading={isLoadingPlaylists}
               onPlaylistsUpdate={fetchPlaylists}
-              onAddToPlaylist={handleAddToPlaylist}
               isCreateDialogOpen={isCreateDialogOpen}
               setIsCreateDialogOpen={setIsCreateDialogOpen}
             />

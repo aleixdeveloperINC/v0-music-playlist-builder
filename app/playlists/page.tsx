@@ -48,7 +48,7 @@ export default function PlaylistsPage() {
         throw error;
       }
     },
-    [fetchPlaylists]
+    [fetchPlaylists],
   );
 
   if (isSessionLoading) {
@@ -77,8 +77,9 @@ export default function PlaylistsPage() {
               Find Songs by BPM
             </h1>
             <p className="text-lg text-muted-foreground mb-8 text-pretty">
-              Search for tracks by tempo, build the perfect playlist for your workout,
-              run, or dance party. Connect your Spotify account to get started.
+              Search for tracks by tempo, build the perfect playlist for your
+              workout, run, or dance party. Connect your Spotify account to get
+              started.
             </p>
             <a
               href="/api/auth/login"
@@ -100,7 +101,6 @@ export default function PlaylistsPage() {
           playlists={playlists}
           isLoading={isLoadingPlaylists}
           onPlaylistsUpdate={fetchPlaylists}
-          onAddToPlaylist={handleAddToPlaylist}
           isCreateDialogOpen={isCreateDialogOpen}
           setIsCreateDialogOpen={setIsCreateDialogOpen}
         />

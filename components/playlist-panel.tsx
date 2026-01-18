@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { Playlist, Track } from "@/lib/types";
 import { PlaylistSelector } from "./playlist-selector";
-import { PlaylistEditor } from "./playlist-editor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,6 @@ interface PlaylistPanelProps {
   playlists: Playlist[];
   isLoading: boolean;
   onPlaylistsUpdate: () => void;
-  onAddToPlaylist: (playlistId: string, tracks: Track[]) => Promise<void>;
   isCreateDialogOpen: boolean;
   setIsCreateDialogOpen: (open: boolean) => void;
 }
@@ -33,17 +31,8 @@ export function PlaylistPanel({
   isCreateDialogOpen,
   setIsCreateDialogOpen,
 }: PlaylistPanelProps) {
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-
-  const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
-
-  useEffect(() => {
-    if (playlists.length > 0 && !selectedPlaylistId) {
-      setSelectedPlaylistId(playlists[0].id);
-    }
-  }, [playlists, selectedPlaylistId]);
 
   const handleCreatePlaylist = useCallback(async () => {
     if (!newPlaylistName.trim()) return;
@@ -58,7 +47,6 @@ export function PlaylistPanel({
 
       const data = await response.json();
       if (data.playlist) {
-        setSelectedPlaylistId(data.playlist.id);
         onPlaylistsUpdate();
       }
 
@@ -73,7 +61,7 @@ export function PlaylistPanel({
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 h-full">
         <Card className="lg:col-span-1">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">Your Playlists</CardTitle>
@@ -81,30 +69,9 @@ export function PlaylistPanel({
           <CardContent>
             <PlaylistSelector
               playlists={playlists}
-              selectedPlaylistId={selectedPlaylistId}
-              onSelectPlaylist={setSelectedPlaylistId}
               onCreatePlaylist={() => setIsCreateDialogOpen(true)}
               isLoading={isLoading}
             />
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2 flex flex-col">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Playlist Editor</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden">
-            {selectedPlaylist ? (
-              <PlaylistEditor
-                key={selectedPlaylist.id}
-                playlist={selectedPlaylist}
-                onUpdate={onPlaylistsUpdate}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Select a playlist to edit or create a new one
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -125,7 +92,10 @@ export function PlaylistPanel({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button
