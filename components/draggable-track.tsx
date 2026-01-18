@@ -69,10 +69,6 @@ export function DraggableTrack({
         <p className="text-sm text-muted-foreground truncate">{track.artists}</p>
       </div>
 
-      <div className="text-sm font-medium text-spotify w-16 text-right">
-        {track.bpm ? `${track.bpm}` : "—"}
-      </div>
-
       <div className="text-sm text-muted-foreground w-12 text-right">
         {formatDuration(track.duration)}
       </div>

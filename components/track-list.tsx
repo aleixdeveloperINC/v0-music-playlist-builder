@@ -4,14 +4,14 @@ import type { Track } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Loader2, Activity } from "lucide-react";
+import { Loader2, Activity, Zap, Music2 } from "lucide-react";
 
 interface TrackListProps {
   tracks: Track[];
   selectedTracks: Set<string>;
   onToggleTrack: (trackId: string) => void;
   showCheckboxes?: boolean;
-  onFetchBpm?: (trackId: string) => void;
+  onFetchAudioFeatures?: (trackId: string) => void;
 }
 
 function formatDuration(ms: number) {
@@ -20,17 +20,80 @@ function formatDuration(ms: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+function AudioFeatures({
+  track,
+  onFetch,
+}: {
+  track: Track;
+  onFetch?: (trackId: string) => void;
+}) {
+  const hasFeatures = track.tempo !== null;
+
+  if (!hasFeatures && !onFetch) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+
+  if (!hasFeatures) {
+    return onFetch ? (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          onFetch(track.id);
+        }}
+        disabled={track.audioFeaturesLoading}
+        className="h-6 px-2 text-xs"
+      >
+        {track.audioFeaturesLoading ? (
+          <Loader2 className="w-3 h-3 animate-spin" />
+        ) : (
+          <Activity className="w-3 h-3" />
+        )}
+      </Button>
+    ) : (
+      <span className="text-muted-foreground">—</span>
+    );
+  }
+
+  return (
+    <div className="flex gap-2 text-xs">
+      <div
+        className="flex items-center gap-1 bg-muted px-2 py-1 rounded"
+        title="Tempo"
+      >
+        <Music2 className="w-3 h-3 text-muted-foreground" />
+        <span className="font-medium">{track.tempo}</span>
+      </div>
+      <div
+        className="flex items-center gap-1 bg-muted px-2 py-1 rounded"
+        title="Danceability"
+      >
+        <Activity className="w-3 h-3 text-muted-foreground" />
+        <span className="font-medium">{track.danceability}%</span>
+      </div>
+      <div
+        className="flex items-center gap-1 bg-muted px-2 py-1 rounded"
+        title="Energy"
+      >
+        <Zap className="w-3 h-3 text-muted-foreground" />
+        <span className="font-medium">{track.energy}%</span>
+      </div>
+    </div>
+  );
+}
+
 export function TrackList({
   tracks,
   selectedTracks,
   onToggleTrack,
   showCheckboxes = true,
-  onFetchBpm,
+  onFetchAudioFeatures,
 }: TrackListProps) {
   if (tracks.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        No tracks found. Try a different search or adjust the BPM range.
+        No tracks found. Try a different search.
       </div>
     );
   }
@@ -72,31 +135,15 @@ export function TrackList({
             <p className="text-sm text-muted-foreground truncate">{track.artists}</p>
           </div>
 
-          <div className="hidden sm:block text-sm text-muted-foreground w-32 truncate">
+          <div className="hidden md:block text-sm text-muted-foreground w-32 truncate">
             {track.album}
           </div>
 
-          <div className="text-sm font-medium text-spotify w-16 text-right">
-            {track.bpm ? `${track.bpm} BPM` : onFetchBpm ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFetchBpm(track.id);
-                }}
-                disabled={track.bpmLoading}
-                className="h-6 px-2 text-xs"
-              >
-                {track.bpmLoading ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Activity className="w-3 h-3" />
-                )}
-              </Button>
-            ) : (
-              "—"
-            )}
+          <div className="w-40 flex-shrink-0">
+            <AudioFeatures
+              track={track}
+              onFetch={onFetchAudioFeatures}
+            />
           </div>
 
           <div className="text-sm text-muted-foreground w-12 text-right">

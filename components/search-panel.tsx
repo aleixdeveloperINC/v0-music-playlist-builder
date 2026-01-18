@@ -34,7 +34,7 @@ export function SearchPanel({
   const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearch = useCallback(
-    async (query: string, minBpm: string, maxBpm: string) => {
+    async (query: string) => {
       setIsSearching(true);
       setHasSearched(true);
       try {
@@ -44,18 +44,7 @@ export function SearchPanel({
         const data = await response.json();
 
         if (data.tracks) {
-          let filteredTracks = data.tracks;
-          
-          if (minBpm || maxBpm) {
-            filteredTracks = filteredTracks.filter((track: Track) => {
-              if (!track.bpm) return false;
-              if (minBpm && track.bpm < parseInt(minBpm)) return false;
-              if (maxBpm && track.bpm > parseInt(maxBpm)) return false;
-              return true;
-            });
-          }
-          
-          setTracks(filteredTracks);
+          setTracks(data.tracks);
           setSelectedTracks(new Set());
         }
       } catch (error) {
@@ -99,34 +88,6 @@ export function SearchPanel({
       setIsAdding(false);
     }
   };
-
-  const handleFetchBpm = useCallback(async (trackId: string) => {
-    setTracks((prev) =>
-      prev.map((t) =>
-        t.id === trackId ? { ...t, bpmLoading: true } : t
-      )
-    );
-
-    try {
-      const response = await fetch(`/api/audio-features/${trackId}`);
-      const data = await response.json();
-
-      if (data.bpm !== undefined) {
-        setTracks((prev) =>
-          prev.map((t) =>
-            t.id === trackId ? { ...t, bpm: data.bpm, bpmLoading: false } : t
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Failed to fetch BPM:", error);
-      setTracks((prev) =>
-        prev.map((t) =>
-          t.id === trackId ? { ...t, bpmLoading: false } : t
-        )
-      );
-    }
-  }, []);
 
   return (
     <Card className="h-full flex flex-col">
@@ -194,11 +155,10 @@ export function SearchPanel({
                 tracks={tracks}
                 selectedTracks={selectedTracks}
                 onToggleTrack={handleToggleTrack}
-                onFetchBpm={handleFetchBpm}
               />
             ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
-              Search for tracks by name, artist, or album and filter by BPM
+              Search for tracks by name, artist, or album
             </div>
           )}
         </div>
