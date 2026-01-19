@@ -115,9 +115,17 @@ export default function PlaylistDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ trackUris: selected.map((t) => t.uri) }),
       });
+
+      await fetch(`/api/playlists/${playlistId}/tracks`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackUris: selected.map((t) => t.uri) }),
+      });
+
       setSelectedTracks(new Set());
+      fetchPlaylist();
     } catch (error) {
-      console.error("Failed to add tracks:", error);
+      console.error("Failed to move tracks:", error);
     } finally {
       setIsAdding(false);
     }

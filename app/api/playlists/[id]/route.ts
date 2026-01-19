@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getPlaylistTracks, updatePlaylistDetails } from "@/lib/spotify";
+import { getPlaylistTracks, updatePlaylistDetails, removeTracksFromPlaylist } from "@/lib/spotify";
 
 export async function GET(
   _request: Request,
@@ -83,6 +83,34 @@ export async function PUT(
     console.error("Update playlist error:", error);
     return NextResponse.json(
       { error: "Failed to update playlist" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("spotify_session")?.value;
+
+  if (!sessionCookie) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  try {
+    const session = JSON.parse(sessionCookie);
+    const { trackUris } = await request.json();
+
+    await removeTracksFromPlaylist(session.accessToken, id, trackUris);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Remove tracks error:", error);
+    return NextResponse.json(
+      { error: "Failed to remove tracks" },
       { status: 500 },
     );
   }
