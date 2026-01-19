@@ -21,7 +21,7 @@ export async function GET(
     const audioFeature = data.content?.[0];
 
     if (!audioFeature) {
-      return NextResponse.json({ error: "Audio features not found" }, { status: 404 });
+      return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
     return NextResponse.json({

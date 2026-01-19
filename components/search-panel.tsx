@@ -137,6 +137,12 @@ export function SearchPanel({
               : t,
           ),
         );
+      } else if (data.error) {
+        setTracks((prev) =>
+          prev.map((t) =>
+            t.id === trackId ? { ...t, audioFeaturesLoading: false } : t,
+          ),
+        );
       }
     } catch (error) {
       console.error("Failed to fetch audio features:", error);
