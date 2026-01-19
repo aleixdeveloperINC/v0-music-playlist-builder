@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSession } from "@/hooks/use-session";
 import { useParams } from "next/navigation";
 import { Header } from "@/components/header";
 import { TrackList } from "@/components/track-list";
 import type { Playlist, Track } from "@/lib/types";
-import { Loader2, Music, ArrowLeft } from "lucide-react";
+import { Loader2, Music, ArrowLeft, Plus, Check } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface TrackWithoutFeatures extends Omit<
   Track,
@@ -26,7 +34,10 @@ export default function PlaylistDetailPage() {
   const { isAuthenticated, isLoading: isSessionLoading } = useSession();
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [tracks, setTracks] = useState<TrackWithoutFeatures[]>([]);
+  const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
 
   const fetchPlaylist = useCallback(async () => {
     try {
@@ -54,11 +65,65 @@ export default function PlaylistDetailPage() {
     }
   }, [playlistId]);
 
+  const fetchPlaylists = useCallback(async () => {
+    try {
+      const response = await fetch("/api/playlists");
+      const data = await response.json();
+      if (data.playlists) {
+        setPlaylists(data.playlists);
+      }
+    } catch (error) {
+      console.error("Failed to fetch playlists:", error);
+    }
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchPlaylist();
+      fetchPlaylists();
     }
-  }, [isAuthenticated, fetchPlaylist]);
+  }, [isAuthenticated, fetchPlaylist, fetchPlaylists]);
+
+  const handleToggleTrack = useCallback((trackId: string) => {
+    setSelectedTracks((prev) => {
+      const next = new Set(prev);
+      if (next.has(trackId)) {
+        next.delete(trackId);
+      } else {
+        next.add(trackId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = () => {
+    if (selectedTracks.size === tracks.length) {
+      setSelectedTracks(new Set());
+    } else {
+      setSelectedTracks(new Set(tracks.map((t) => t.id)));
+    }
+  };
+
+  const handleAddToPlaylist = async (targetPlaylistId: string) => {
+    const selected = tracks.filter((t) => selectedTracks.has(t.id));
+    if (selected.length === 0 || targetPlaylistId === playlistId) return;
+
+    setIsAdding(true);
+    try {
+      await fetch(`/api/playlists/${targetPlaylistId}/tracks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackUris: selected.map((t) => t.uri) }),
+      });
+      setSelectedTracks(new Set());
+    } catch (error) {
+      console.error("Failed to add tracks:", error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const otherPlaylists = playlists.filter((p) => p.id !== playlistId);
 
   if (isSessionLoading) {
     return (
@@ -151,11 +216,64 @@ export default function PlaylistDetailPage() {
               </div>
             </div>
 
+            {tracks.length > 0 && (
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+                    {selectedTracks.size === tracks.length ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Deselect All
+                      </>
+                    ) : (
+                      "Select All"
+                    )}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedTracks.size} of {tracks.length} selected
+                  </span>
+                </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      disabled={selectedTracks.size === 0 || isAdding}
+                      size="sm"
+                      className="bg-spotify hover:bg-spotify/90 text-card"
+                    >
+                      {isAdding ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
+                      Move to Playlist
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {otherPlaylists.length > 0 ? (
+                      otherPlaylists.map((playlist) => (
+                        <DropdownMenuItem
+                          key={playlist.id}
+                          onClick={() => handleAddToPlaylist(playlist.id)}
+                        >
+                          {playlist.name}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-2">
+                        No other playlists
+                      </p>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             <TrackList
               tracks={tracks}
-              selectedTracks={new Set()}
-              onToggleTrack={() => {}}
-              showCheckboxes={false}
+              selectedTracks={selectedTracks}
+              onToggleTrack={handleToggleTrack}
+              showCheckboxes={true}
             />
           </div>
         )}
