@@ -255,6 +255,7 @@ export default function PlaylistDetailPage() {
                 </div>
               )}
               <div>
+                <p className="text-sm text-muted-foreground mb-1">Playlist</p>
                 <h1 className="text-2xl font-bold text-foreground">
                   {playlist.name}
                 </h1>
