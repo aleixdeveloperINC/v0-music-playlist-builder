@@ -37,7 +37,7 @@ export function SearchPanel({
   const [isSearching, setIsSearching] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [sortColumn, setSortColumn] = useState<keyof Track>("name");
+  const [sortColumn, setSortColumn] = useState<keyof Track | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -166,9 +166,10 @@ export function SearchPanel({
   };
 
   const sortedTracks = useMemo(() => {
+    if (!sortColumn) return tracks;
     return [...tracks].sort((a, b) => {
-      const aValue = a[sortColumn];
-      const bValue = b[sortColumn];
+      const aValue = a[sortColumn as keyof Track];
+      const bValue = b[sortColumn as keyof Track];
 
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;
@@ -277,7 +278,7 @@ export function SearchPanel({
                 tracks={paginatedTracks}
                 selectedTracks={selectedTracks}
                 onToggleTrack={handleToggleTrack}
-                sortColumn={sortColumn}
+                sortColumn={sortColumn || undefined}
                 sortDirection={sortDirection}
                 onSort={handleSort}
                 onFetchAudioFeatures={handleFetchAudioFeatures}
