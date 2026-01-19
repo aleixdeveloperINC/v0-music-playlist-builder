@@ -102,10 +102,10 @@ function SortIcon({
   direction,
 }: {
   column: keyof Track;
-  currentColumn: keyof Track;
-  direction: "asc" | "desc";
+  currentColumn?: keyof Track;
+  direction?: "asc" | "desc";
 }) {
-  if (column !== currentColumn) {
+  if (!currentColumn || column !== currentColumn) {
     return null;
   }
   return direction === "asc" ? (
@@ -124,11 +124,11 @@ function TableHeader({
 }: {
   label: string;
   column: keyof Track;
-  currentColumn: keyof Track;
+  currentColumn?: keyof Track;
   sortDirection?: "asc" | "desc";
   onClick?: () => void;
 }) {
-  const isActive = column === currentColumn;
+  const isActive = currentColumn === column;
 
   return (
     <th
@@ -143,7 +143,7 @@ function TableHeader({
         <SortIcon
           column={column}
           currentColumn={currentColumn}
-          direction={sortDirection || "asc"}
+          direction={sortDirection}
         />
       </div>
     </th>
@@ -181,38 +181,38 @@ export function TrackList({
             <TableHeader
               label="Cover"
               column="name"
-              currentColumn={sortColumn || "name"}
+              currentColumn={sortColumn}
             />
             <TableHeader
               label="Title"
               column="name"
-              currentColumn={sortColumn || "name"}
+              currentColumn={sortColumn}
               sortDirection={sortDirection}
               onClick={() => onSort?.("name")}
             />
             <TableHeader
               label="Artist"
               column="artists"
-              currentColumn={sortColumn || "name"}
+              currentColumn={sortColumn}
               sortDirection={sortDirection}
               onClick={() => onSort?.("artists")}
             />
             <TableHeader
               label="Album"
               column="album"
-              currentColumn={sortColumn || "name"}
+              currentColumn={sortColumn}
               sortDirection={sortDirection}
               onClick={() => onSort?.("album")}
             />
             <TableHeader
               label="Audio Features"
               column="tempo"
-              currentColumn={sortColumn || "name"}
+              currentColumn={sortColumn}
             />
             <TableHeader
               label="Duration"
               column="duration"
-              currentColumn={sortColumn || "name"}
+              currentColumn={sortColumn}
               sortDirection={sortDirection}
               onClick={() => onSort?.("duration")}
             />
