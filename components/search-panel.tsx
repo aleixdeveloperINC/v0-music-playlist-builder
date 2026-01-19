@@ -50,31 +50,34 @@ export function SearchPanel({
     }
   }, []);
 
-  const handleSearch = useCallback(async (query: string, updateUrl = true) => {
-    setIsSearching(true);
-    setHasSearched(true);
-    setCurrentPage(1);
+  const handleSearch = useCallback(
+    async (query: string, updateUrl = true) => {
+      setIsSearching(true);
+      setHasSearched(true);
+      setCurrentPage(1);
 
-    if (updateUrl) {
-      router.replace(`?q=${encodeURIComponent(query)}`, { scroll: false });
-    }
-
-    try {
-      const params = new URLSearchParams({ q: query });
-
-      const response = await fetch(`/api/search?${params}`);
-      const data = await response.json();
-
-      if (data.tracks) {
-        setTracks(data.tracks);
-        setSelectedTracks(new Set());
+      if (updateUrl) {
+        router.replace(`?q=${encodeURIComponent(query)}`, { scroll: false });
       }
-    } catch (error) {
-      console.error("Search error:", error);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [router]);
+
+      try {
+        const params = new URLSearchParams({ q: query });
+
+        const response = await fetch(`/api/search?${params}`);
+        const data = await response.json();
+
+        if (data.tracks) {
+          setTracks(data.tracks);
+          setSelectedTracks(new Set());
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [router],
+  );
 
   const handleToggleTrack = useCallback((trackId: string) => {
     setSelectedTracks((prev) => {
@@ -112,8 +115,8 @@ export function SearchPanel({
   const handleFetchAudioFeatures = useCallback(async (trackId: string) => {
     setTracks((prev) =>
       prev.map((t) =>
-        t.id === trackId ? { ...t, audioFeaturesLoading: true } : t
-      )
+        t.id === trackId ? { ...t, audioFeaturesLoading: true } : t,
+      ),
     );
 
     try {
@@ -131,16 +134,16 @@ export function SearchPanel({
                   energy: data.energy,
                   audioFeaturesLoading: false,
                 }
-              : t
-          )
+              : t,
+          ),
         );
       }
     } catch (error) {
       console.error("Failed to fetch audio features:", error);
       setTracks((prev) =>
         prev.map((t) =>
-          t.id === trackId ? { ...t, audioFeaturesLoading: false } : t
-        )
+          t.id === trackId ? { ...t, audioFeaturesLoading: false } : t,
+        ),
       );
     }
   }, []);

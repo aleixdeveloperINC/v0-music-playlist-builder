@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { getAudioFeature } from "@/lib/spotify";
+
+const RECCOBEATS_API_BASE = "https://api.reccobeats.com/v1";
 
 export async function GET(
   request: Request,
@@ -8,16 +8,21 @@ export async function GET(
 ) {
   const { trackId } = await params;
 
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("spotify_session")?.value;
-
-  if (!sessionCookie) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
   try {
-    const session = JSON.parse(sessionCookie);
-    const audioFeature = await getAudioFeature(session.accessToken, trackId);
+    const response = await fetch(
+      `${RECCOBEATS_API_BASE}/audio-features?ids=${trackId}`,
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to get audio features");
+    }
+
+    const data = await response.json();
+    const audioFeature = data.content?.[0];
+
+    if (!audioFeature) {
+      return NextResponse.json({ error: "Audio features not found" }, { status: 404 });
+    }
 
     return NextResponse.json({
       tempo: audioFeature.tempo ? Math.round(audioFeature.tempo) : null,
