@@ -21,11 +21,11 @@ interface TrackWithoutFeatures extends Omit<
   Track,
   "tempo" | "danceability" | "energy" | "audioFeaturesLoading" | "featuresError"
 > {
-  tempo: null;
-  danceability: null;
-  energy: null;
-  audioFeaturesLoading: false;
-  featuresError?: false;
+  tempo: number | null;
+  danceability: number | null;
+  energy: number | null;
+  audioFeaturesLoading: boolean;
+  featuresError?: boolean;
 }
 
 export default function PlaylistDetailPage() {
@@ -55,6 +55,7 @@ export default function PlaylistDetailPage() {
             danceability: null,
             energy: null,
             audioFeaturesLoading: false,
+            featuresError: false,
           })),
         );
       }
@@ -130,6 +131,50 @@ export default function PlaylistDetailPage() {
       setIsAdding(false);
     }
   };
+
+  const handleFetchAudioFeatures = useCallback(async (trackId: string) => {
+    setTracks((prev) =>
+      prev.map((t) =>
+        t.id === trackId ? { ...t, audioFeaturesLoading: true } : t,
+      ),
+    );
+
+    try {
+      const response = await fetch(`/api/audio-features/${trackId}`);
+      const data = await response.json();
+
+      if (data.tempo !== undefined) {
+        setTracks((prev) =>
+          prev.map((t) =>
+            t.id === trackId
+              ? {
+                  ...t,
+                  tempo: data.tempo,
+                  danceability: data.danceability,
+                  energy: data.energy,
+                  audioFeaturesLoading: false,
+                }
+              : t,
+          ),
+        );
+      } else if (data.error) {
+        setTracks((prev) =>
+          prev.map((t) =>
+            t.id === trackId
+              ? { ...t, audioFeaturesLoading: false, featuresError: true }
+              : t,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("Failed to fetch audio features:", error);
+      setTracks((prev) =>
+        prev.map((t) =>
+          t.id === trackId ? { ...t, audioFeaturesLoading: false } : t,
+        ),
+      );
+    }
+  }, []);
 
   const otherPlaylists = playlists.filter((p) => p.id !== playlistId);
 
@@ -282,6 +327,7 @@ export default function PlaylistDetailPage() {
               selectedTracks={selectedTracks}
               onToggleTrack={handleToggleTrack}
               showCheckboxes={true}
+              onFetchAudioFeatures={handleFetchAudioFeatures}
             />
           </div>
         )}
