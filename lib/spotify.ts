@@ -72,6 +72,8 @@ export async function searchTracks(
   query: string,
   limit = 50,
 ) {
+  console.log("limit.toString()", limit.toString());
+
   const params = new URLSearchParams({
     q: query,
     type: "track",
@@ -105,10 +107,7 @@ export async function getAudioFeatures(
   return response.json();
 }
 
-export async function getAudioFeature(
-  accessToken: string,
-  trackId: string,
-) {
+export async function getAudioFeature(accessToken: string, trackId: string) {
   const response = await fetch(
     `${SPOTIFY_API_BASE}/audio-features/${trackId}`,
     { headers: { Authorization: `Bearer ${accessToken}` } },

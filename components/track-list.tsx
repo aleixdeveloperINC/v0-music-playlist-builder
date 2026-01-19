@@ -178,11 +178,9 @@ export function TrackList({
                 <span className="sr-only">Select</span>
               </th>
             )}
-            <TableHeader
-              label="Cover"
-              column="name"
-              currentColumn={sortColumn}
-            />
+            <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">
+              Cover
+            </th>
             <TableHeader
               label="Title"
               column="name"
