@@ -70,14 +70,14 @@ export async function refreshSpotifyToken(refreshToken: string) {
 export async function searchTracks(
   accessToken: string,
   query: string,
-  limit = 50,
+  limit = 20,
+  offset = 0,
 ) {
-  console.log("limit.toString()", limit.toString());
-
   const params = new URLSearchParams({
     q: query,
     type: "track",
     limit: limit.toString(),
+    offset: offset.toString(),
   });
 
   const response = await fetch(`${SPOTIFY_API_BASE}/search?${params}`, {

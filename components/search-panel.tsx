@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SearchForm } from "./search-form";
 import { TrackList } from "./track-list";
@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const PAGE_SIZE_OPTIONS = [20, 50, 100];
 
 interface SearchPanelProps {
   playlists: Playlist[];
@@ -37,10 +37,9 @@ export function SearchPanel({
   const [isSearching, setIsSearching] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [sortColumn, setSortColumn] = useState<keyof Track | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   const initialQuery = searchParams.get("q") || "";
 
@@ -61,13 +60,18 @@ export function SearchPanel({
       }
 
       try {
-        const params = new URLSearchParams({ q: query });
+        const params = new URLSearchParams({
+          q: query,
+          limit: pageSize.toString(),
+          offset: "0",
+        });
 
         const response = await fetch(`/api/search?${params}`);
         const data = await response.json();
 
         if (data.tracks) {
           setTracks(data.tracks);
+          setTotal(data.total || 0);
           setSelectedTracks(new Set());
         }
       } catch (error) {
@@ -76,7 +80,55 @@ export function SearchPanel({
         setIsSearching(false);
       }
     },
-    [router],
+    [router, pageSize],
+  );
+
+  const fetchPage = useCallback(
+    async (page: number) => {
+      const query = searchParams.get("q");
+      if (!query) return;
+
+      setIsSearching(true);
+      try {
+        const offset = (page - 1) * pageSize;
+        const params = new URLSearchParams({
+          q: query,
+          limit: pageSize.toString(),
+          offset: offset.toString(),
+        });
+
+        const response = await fetch(`/api/search?${params}`);
+        const data = await response.json();
+
+        if (data.tracks) {
+          setTracks(data.tracks);
+          setTotal(data.total || 0);
+          setSelectedTracks(new Set());
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [searchParams, pageSize],
+  );
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setCurrentPage(page);
+      fetchPage(page);
+    },
+    [fetchPage],
+  );
+
+  const handlePageSizeChange = useCallback(
+    (size: number) => {
+      setPageSize(size);
+      setCurrentPage(1);
+      fetchPage(1);
+    },
+    [fetchPage],
   );
 
   const handleToggleTrack = useCallback((trackId: string) => {
@@ -92,10 +144,10 @@ export function SearchPanel({
   }, []);
 
   const handleSelectAll = () => {
-    if (selectedTracks.size === paginatedTracks.length) {
+    if (selectedTracks.size === tracks.length) {
       setSelectedTracks(new Set());
     } else {
-      setSelectedTracks(new Set(paginatedTracks.map((t) => t.id)));
+      setSelectedTracks(new Set(tracks.map((t) => t.id)));
     }
   };
 
@@ -156,56 +208,9 @@ export function SearchPanel({
     }
   }, []);
 
-  const handleSort = (column: keyof Track) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
-  };
-
-  const sortedTracks = useMemo(() => {
-    if (!sortColumn) return tracks;
-    return [...tracks].sort((a, b) => {
-      const aValue = a[sortColumn as keyof Track];
-      const bValue = b[sortColumn as keyof Track];
-
-      if (aValue === null || aValue === undefined) return 1;
-      if (bValue === null || bValue === undefined) return -1;
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return 0;
-    });
-  }, [tracks, sortColumn, sortDirection]);
-
-  const totalPages = Math.ceil(sortedTracks.length / pageSize);
-  const paginatedTracks = sortedTracks.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
+  const totalPages = Math.ceil(total / pageSize);
   const getStartIndex = () => (currentPage - 1) * pageSize + 1;
-  const getEndIndex = () =>
-    Math.min(currentPage * pageSize, sortedTracks.length);
+  const getEndIndex = () => Math.min(currentPage * pageSize, total);
 
   return (
     <Card className="h-full flex flex-col">
@@ -219,11 +224,11 @@ export function SearchPanel({
           initialQuery={initialQuery}
         />
 
-        {hasSearched && sortedTracks.length > 0 && (
+        {hasSearched && tracks.length > 0 && (
           <div className="flex items-center justify-between border-b border-border pb-3">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={handleSelectAll}>
-                {selectedTracks.size === paginatedTracks.length ? (
+                {selectedTracks.size === tracks.length ? (
                   <>
                     <Check className="w-4 h-4 mr-2" />
                     Deselect All
@@ -233,7 +238,7 @@ export function SearchPanel({
                 )}
               </Button>
               <span className="text-sm text-muted-foreground">
-                {selectedTracks.size} of {sortedTracks.length} selected
+                {selectedTracks.size} of {total} selected
               </span>
             </div>
 
@@ -275,20 +280,16 @@ export function SearchPanel({
           {hasSearched ? (
             <>
               <TrackList
-                tracks={paginatedTracks}
+                tracks={tracks}
                 selectedTracks={selectedTracks}
                 onToggleTrack={handleToggleTrack}
-                sortColumn={sortColumn || undefined}
-                sortDirection={sortDirection}
-                onSort={handleSort}
                 onFetchAudioFeatures={handleFetchAudioFeatures}
               />
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
-                      Showing {getStartIndex()}-{getEndIndex()} of{" "}
-                      {sortedTracks.length}
+                      Showing {getStartIndex()}-{getEndIndex()} of {total}
                     </span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
