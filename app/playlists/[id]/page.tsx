@@ -11,12 +11,13 @@ import Link from "next/link";
 
 interface TrackWithoutFeatures extends Omit<
   Track,
-  "tempo" | "danceability" | "energy" | "audioFeaturesLoading"
+  "tempo" | "danceability" | "energy" | "audioFeaturesLoading" | "featuresError"
 > {
   tempo: null;
   danceability: null;
   energy: null;
   audioFeaturesLoading: false;
+  featuresError?: false;
 }
 
 export default function PlaylistDetailPage() {

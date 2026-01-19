@@ -140,7 +140,9 @@ export function SearchPanel({
       } else if (data.error) {
         setTracks((prev) =>
           prev.map((t) =>
-            t.id === trackId ? { ...t, audioFeaturesLoading: false } : t,
+            t.id === trackId
+              ? { ...t, audioFeaturesLoading: false, featuresError: true }
+              : t,
           ),
         );
       }

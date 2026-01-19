@@ -10,6 +10,7 @@ export interface Track {
   danceability: number | null;
   energy: number | null;
   audioFeaturesLoading: boolean;
+  featuresError?: boolean;
 }
 
 export interface Playlist {

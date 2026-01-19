@@ -37,6 +37,13 @@ function AudioFeatures({
   }
 
   if (!hasFeatures) {
+    if (track.featuresError) {
+      return (
+        <span className="text-muted-foreground text-xs px-2 py-1 bg-muted/50 rounded">
+          No features
+        </span>
+      );
+    }
     return onFetch ? (
       <Button
         variant="outline"
