@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getPlaylistTracks, updatePlaylistDetails, removeTracksFromPlaylist } from "@/lib/spotify";
+import {
+  getPlaylist,
+  updatePlaylistDetails,
+  removeTracksFromPlaylist,
+} from "@/lib/spotify";
 
 export async function GET(
   _request: Request,
@@ -16,7 +20,7 @@ export async function GET(
 
   try {
     const session = JSON.parse(sessionCookie);
-    const playlistData = await getPlaylistTracks(session.accessToken, id);
+    const playlistData = await getPlaylist(session.accessToken, id);
 
     const playlistInfo = {
       id: playlistData.id,
@@ -27,7 +31,7 @@ export async function GET(
       ownerId: playlistData.owner?.id,
     };
 
-    const tracks = playlistData.items
+    const tracks = playlistData.tracks.items
       .filter((item: { track: unknown }) => item.track)
       .map(
         (item: {

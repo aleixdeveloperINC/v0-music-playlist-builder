@@ -259,11 +259,7 @@ export default function PlaylistDetailPage() {
                 <h1 className="text-2xl font-bold text-foreground">
                   {playlist.name}
                 </h1>
-                {playlist.description && (
-                  <p className="text-muted-foreground mt-1">
-                    {playlist.description}
-                  </p>
-                )}
+
                 <p className="text-sm text-muted-foreground mt-1">
                   {tracks.length} tracks
                 </p>
