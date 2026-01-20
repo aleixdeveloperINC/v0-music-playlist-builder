@@ -66,6 +66,63 @@ export default function PlaylistDetailPage() {
     }
   }, [playlistId]);
 
+  const fetchAudioFeatures = useCallback(
+    async (trackIds: string[]) => {
+      if (trackIds.length === 0) return;
+
+      setTracks((prev) =>
+        prev.map((t) =>
+          trackIds.includes(t.id) ? { ...t, audioFeaturesLoading: true } : t,
+        ),
+      );
+
+      try {
+        const response = await fetch(
+          `/api/audio-features/batch?ids=${trackIds.join(",")}`,
+        );
+        const data = await response.json();
+
+        if (data.features) {
+          setTracks((prev) =>
+            prev.map((t) => {
+              const feature = data.features.find((f: { id: string }) => f.id === t.id);
+              if (feature) {
+                return {
+                  ...t,
+                  tempo: feature.tempo,
+                  danceability: feature.danceability,
+                  energy: feature.energy,
+                  audioFeaturesLoading: false,
+                };
+              }
+              if (trackIds.includes(t.id)) {
+                return { ...t, audioFeaturesLoading: false, featuresError: true };
+              }
+              return t;
+            }),
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch audio features:", error);
+        setTracks((prev) =>
+          prev.map((t) =>
+            trackIds.includes(t.id)
+              ? { ...t, audioFeaturesLoading: false, featuresError: true }
+              : t,
+          ),
+        );
+      }
+    },
+    [],
+  );
+
+  const handleFetchAudioFeatures = useCallback(
+    async (trackId: string) => {
+      await fetchAudioFeatures([trackId]);
+    },
+    [fetchAudioFeatures],
+  );
+
   const fetchPlaylists = useCallback(async () => {
     try {
       const response = await fetch("/api/playlists");
@@ -131,50 +188,6 @@ export default function PlaylistDetailPage() {
       setIsAdding(false);
     }
   };
-
-  const handleFetchAudioFeatures = useCallback(async (trackId: string) => {
-    setTracks((prev) =>
-      prev.map((t) =>
-        t.id === trackId ? { ...t, audioFeaturesLoading: true } : t,
-      ),
-    );
-
-    try {
-      const response = await fetch(`/api/audio-features/${trackId}`);
-      const data = await response.json();
-
-      if (data.tempo !== undefined) {
-        setTracks((prev) =>
-          prev.map((t) =>
-            t.id === trackId
-              ? {
-                  ...t,
-                  tempo: data.tempo,
-                  danceability: data.danceability,
-                  energy: data.energy,
-                  audioFeaturesLoading: false,
-                }
-              : t,
-          ),
-        );
-      } else if (data.error) {
-        setTracks((prev) =>
-          prev.map((t) =>
-            t.id === trackId
-              ? { ...t, audioFeaturesLoading: false, featuresError: true }
-              : t,
-          ),
-        );
-      }
-    } catch (error) {
-      console.error("Failed to fetch audio features:", error);
-      setTracks((prev) =>
-        prev.map((t) =>
-          t.id === trackId ? { ...t, audioFeaturesLoading: false } : t,
-        ),
-      );
-    }
-  }, []);
 
   const otherPlaylists = playlists.filter((p) => p.id !== playlistId);
 
