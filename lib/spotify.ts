@@ -1,6 +1,7 @@
 const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
 const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
+const RECCOBEATS_API_BASE = "https://api.reccobeats.com/v1";
 
 const SCOPES = [
   "user-read-private",
@@ -280,4 +281,16 @@ export async function updatePlaylistDetails(
   }
 
   return response;
+}
+
+export async function getReccobeatsAudioFeatures(trackIds: string[]) {
+  const response = await fetch(
+    `${RECCOBEATS_API_BASE}/audio-features?ids=${trackIds.join(",")}`,
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to get Reccobeats audio features");
+  }
+
+  return response.json();
 }

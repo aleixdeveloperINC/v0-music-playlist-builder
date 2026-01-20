@@ -4,7 +4,10 @@ import {
   getPlaylist,
   updatePlaylistDetails,
   removeTracksFromPlaylist,
+  getReccobeatsAudioFeatures,
 } from "@/lib/spotify";
+
+const RECCOBEATS_API_BASE = "https://api.reccobeats.com/v1";
 
 export async function GET(
   _request: Request,
@@ -51,8 +54,46 @@ export async function GET(
           album: item.track.album.name,
           albumImage: item.track.album.images[0]?.url,
           duration: item.track.duration_ms,
+          tempo: null,
+          danceability: null,
+          energy: null,
+          audioFeaturesLoading: false,
+          featuresError: false,
         }),
       );
+
+    if (tracks.length <= 20 && tracks.length > 0) {
+      try {
+        const trackIds = tracks.map((t: { id: string }) => t.id).join(",");
+        const response = await fetch(
+          `${RECCOBEATS_API_BASE}/audio-features?ids=${trackIds}`,
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const featuresMap = new Map<
+            string,
+            { id: string; energy: number; danceability: number; tempo: number }
+          >(
+            data.content?.map((f: { id: string; energy: number; danceability: number; tempo: number }) => [
+              f.id,
+              f,
+            ]) || [],
+          );
+
+          for (const track of tracks) {
+            const features = featuresMap.get(track.id);
+            if (features) {
+              track.tempo = Math.round(features.tempo);
+              track.danceability = Math.round(features.danceability * 100);
+              track.energy = Math.round(features.energy * 100);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch audio features:", error);
+      }
+    }
 
     return NextResponse.json({ playlist: playlistInfo, tracks });
   } catch (error) {
