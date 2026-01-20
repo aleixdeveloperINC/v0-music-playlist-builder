@@ -45,7 +45,7 @@ export function SearchForm({
         <Button
           type="submit"
           disabled={isLoading || !query.trim()}
-          className="bg-spotify hover:bg-spotify/90 text-card"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           {isLoading ? (
             <>
