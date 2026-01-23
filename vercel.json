@@ -2,12 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "env": {
-    "NEXTAUTH_URL": {
-      "description": "The canonical URL of your production deployment",
-      "value": "https://your-app-name.vercel.app"
-    }
-  },
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
