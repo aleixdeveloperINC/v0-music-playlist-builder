@@ -12,6 +12,18 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
+import { X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface TrackListProps {
   tracks: Track[];
@@ -22,6 +34,8 @@ interface TrackListProps {
   sortColumn?: keyof Track;
   sortDirection?: "asc" | "desc";
   onSort?: (column: keyof Track) => void;
+  onRemoveTracks?: (trackIds: string[]) => void;
+  playlistId?: string;
 }
 
 function formatDuration(ms: number) {
@@ -192,6 +206,7 @@ export function TrackList({
   sortColumn,
   sortDirection,
   onSort,
+  onRemoveTracks,
 }: TrackListProps) {
   if (tracks.length === 0) {
     return (
@@ -269,6 +284,11 @@ export function TrackList({
               sortDirection={sortDirection}
               onClick={() => onSort?.("duration")}
             />
+            {onRemoveTracks && (
+              <th className="px-3 py-2 w-12">
+                <span className="sr-only">Actions</span>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -326,6 +346,40 @@ export function TrackList({
               <td className="px-3 py-3 text-sm text-muted-foreground text-right whitespace-nowrap">
                 {formatDuration(track.duration)}
               </td>
+              {onRemoveTracks && (
+                <td className="px-3 py-3 text-center">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remove Track</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to remove "{track.name}" from
+                          this playlist? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => onRemoveTracks([track.id])}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          Remove
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

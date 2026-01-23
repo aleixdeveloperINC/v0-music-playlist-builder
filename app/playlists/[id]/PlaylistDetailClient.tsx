@@ -48,10 +48,11 @@ export function PlaylistDetailClient({
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof Track>();
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const fetchPlaylist = useCallback(async () => {
+  /*  const fetchPlaylist = useCallback(async () => {
     try {
       const response = await fetch(`/api/playlists/${playlistId}`);
       const data = await response.json();
@@ -76,7 +77,7 @@ export function PlaylistDetailClient({
     } finally {
       setIsLoading(false);
     }
-  }, [playlistId]);
+  }, [playlistId]); */
 
   const fetchPlaylists = useCallback(async () => {
     try {
@@ -178,6 +179,51 @@ export function PlaylistDetailClient({
     },
     [sortColumn, sortDirection],
   );
+
+  const handleRemoveTracks = async (trackIds: string[]) => {
+    const tracksToRemove = tracks.filter((t) => trackIds.includes(t.id));
+
+    if (tracksToRemove.length === 0) return;
+    try {
+      setIsRemoving(true);
+      // Call the API to remove tracks
+      await fetch(`/api/playlists/${playlistId}/tracks`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackUris: tracksToRemove.map((t) => t.uri) }),
+      });
+      // Remove tracks from local state
+      setTracks((prevTracks) =>
+        prevTracks.filter((track) => !trackIds.includes(track.id)),
+      );
+      setSelectedTracks(new Set());
+      // Update playlist track count
+      if (playlist) {
+        setPlaylist((prev) =>
+          prev
+            ? { ...prev, trackCount: prev.trackCount - tracksToRemove.length }
+            : null,
+        );
+      }
+      setIsRemoving(false);
+      toast({
+        title: "Tracks removed successfully",
+        description: `Removed ${tracksToRemove.length} ${tracksToRemove.length === 1 ? "track" : "tracks"} from playlist`,
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("Failed to remove tracks:", error);
+      toast({
+        title: "Failed to remove tracks",
+        description:
+          "An error occurred while removing tracks. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   const sortedTracks = useMemo(() => {
     if (!sortColumn) return tracks;
     return [...tracks].sort((a, b) => {
@@ -305,39 +351,57 @@ export function PlaylistDetailClient({
                     {selectedTracks.size} of {tracks.length} selected
                   </span>
                 </div>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      disabled={selectedTracks.size === 0 || isAdding}
-                      size="sm"
-                      className="bg-spotify hover:bg-spotify/90 text-card"
-                    >
-                      {isAdding ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Plus className="w-4 h-4 mr-2" />
-                      )}
-                      Move to Playlist
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    {otherPlaylists.length > 0 ? (
-                      otherPlaylists.map((playlist) => (
-                        <DropdownMenuItem
-                          key={playlist.id}
-                          onClick={() => handleAddToPlaylist(playlist.id)}
-                        >
-                          {playlist.name}
-                        </DropdownMenuItem>
-                      ))
+                <div className="flex gap-4">
+                  <Button
+                    disabled={selectedTracks.size < 1 || isRemoving}
+                    size="sm"
+                    className="bg-destructive hover:bg-destructive/90 text-card"
+                    onClick={() =>
+                      handleRemoveTracks(Array.from(selectedTracks))
+                    }
+                  >
+                    {isRemoving ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-2">
-                        No other playlists
-                      </p>
+                      <Plus className="w-4 h-4 mr-2" />
                     )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    Remove tracks from Playlist
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        disabled={selectedTracks.size === 0 || isAdding}
+                        size="sm"
+                        className="bg-spotify hover:bg-spotify/90 text-card"
+                      >
+                        {isAdding ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Plus className="w-4 h-4 mr-2" />
+                        )}
+                        Move to Playlist
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end" className="w-56">
+                      {otherPlaylists.length > 0 ? (
+                        otherPlaylists.map((playlist) => (
+                          <DropdownMenuItem
+                            key={playlist.id}
+                            onClick={() => handleAddToPlaylist(playlist.id)}
+                          >
+                            {playlist.name}
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center py-2">
+                          No other playlists
+                        </p>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             )}
 
@@ -349,6 +413,7 @@ export function PlaylistDetailClient({
               sortColumn={sortColumn}
               sortDirection={sortDirection}
               onSort={handleSort}
+              onRemoveTracks={handleRemoveTracks}
             />
           </div>
         )}
