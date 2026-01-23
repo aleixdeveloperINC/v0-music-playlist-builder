@@ -4,7 +4,6 @@ import {
   getPlaylist,
   updatePlaylistDetails,
   removeTracksFromPlaylist,
-  getReccobeatsAudioFeatures,
 } from "@/lib/spotify";
 
 const RECCOBEATS_API_BASE = "https://api.reccobeats.com/v1";
@@ -75,10 +74,14 @@ export async function GET(
             string,
             { id: string; energy: number; danceability: number; tempo: number }
           >(
-            data.content?.map((f: { id: string; energy: number; danceability: number; tempo: number }) => [
-              f.id,
-              f,
-            ]) || [],
+            data.content?.map(
+              (f: {
+                id: string;
+                energy: number;
+                danceability: number;
+                tempo: number;
+              }) => [f.id, f],
+            ) || [],
           );
 
           for (const track of tracks) {

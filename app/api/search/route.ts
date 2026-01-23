@@ -21,7 +21,12 @@ export async function GET(request: Request) {
 
   try {
     const session = JSON.parse(sessionCookie);
-    const searchResult = await searchTracks(session.accessToken, query, limit, offset);
+    const searchResult = await searchTracks(
+      session.accessToken,
+      query,
+      limit,
+      offset,
+    );
     const tracks = searchResult.tracks.items.map(
       (track: {
         id: string;

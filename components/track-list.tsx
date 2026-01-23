@@ -4,7 +4,14 @@ import type { Track } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Loader2, Activity, Zap, Music2, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Loader2,
+  Activity,
+  Zap,
+  Music2,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 
 interface TrackListProps {
   tracks: Track[];
@@ -33,66 +40,82 @@ function AudioFeatures({
   const hasFeatures = track.tempo !== null;
 
   if (!hasFeatures && !onFetch) {
-    return <span className="text-muted-foreground text-xs">—</span>;
+    return (
+      <td colSpan={3} className="px-3 py-3 text-center">
+        <span className="text-muted-foreground text-xs">—</span>
+      </td>
+    );
   }
 
   if (!hasFeatures) {
     if (track.featuresError) {
       return (
-        <span className="text-muted-foreground text-xs px-2 py-1 bg-muted/50 rounded">
-          No features
-        </span>
+        <td colSpan={3} className="px-3 py-3 text-center">
+          <span className="text-muted-foreground text-xs px-2 py-1 bg-muted/50 rounded">
+            No features
+          </span>
+        </td>
       );
     }
     return onFetch ? (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={(e) => {
-          e.stopPropagation();
-          onFetch(track.id);
-        }}
-        disabled={track.audioFeaturesLoading}
-        className="h-7 px-3 text-xs"
-      >
-        {track.audioFeaturesLoading ? (
-          <>
-            <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-            Loading...
-          </>
-        ) : (
-          "Get features"
-        )}
-      </Button>
+      <td colSpan={3} className="px-3 py-3 text-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onFetch(track.id);
+          }}
+          disabled={track.audioFeaturesLoading}
+          className="h-7 px-3 text-xs"
+        >
+          {track.audioFeaturesLoading ? (
+            <>
+              <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+              Loading...
+            </>
+          ) : (
+            "Get features"
+          )}
+        </Button>
+      </td>
     ) : (
-      <span className="text-muted-foreground text-xs">—</span>
+      <td colSpan={3} className="px-3 py-3 text-center">
+        <span className="text-muted-foreground text-xs">—</span>
+      </td>
     );
   }
 
   return (
-    <div className="flex gap-2 text-xs">
-      <div
-        className="flex items-center gap-1 bg-muted px-2 py-1 rounded"
-        title="Tempo"
-      >
-        <Music2 className="w-3 h-3 text-muted-foreground" />
-        <span className="font-medium">{track.tempo}</span>
-      </div>
-      <div
-        className="flex items-center gap-1 bg-muted px-2 py-1 rounded"
-        title="Danceability"
-      >
-        <Activity className="w-3 h-3 text-muted-foreground" />
-        <span className="font-medium">{track.danceability}%</span>
-      </div>
-      <div
-        className="flex items-center gap-1 bg-muted px-2 py-1 rounded"
-        title="Energy"
-      >
-        <Zap className="w-3 h-3 text-muted-foreground" />
-        <span className="font-medium">{track.energy}%</span>
-      </div>
-    </div>
+    <>
+      <td className="px-3 py-3 text-center">
+        <div
+          className="flex items-center gap-1 px-2 py-1 rounded"
+          title="Tempo"
+        >
+          <Music2 className="w-3 h-3 text-muted-foreground" />
+          <span className="font-medium">{track.tempo}</span>
+        </div>
+      </td>
+      <td className="px-3 py-3 text-center">
+        <div
+          className="flex items-center gap-1 px-2 py-1 rounded"
+          title="Danceability"
+        >
+          <Activity className="w-3 h-3 text-muted-foreground" />
+          <span className="font-medium">{track.danceability}%</span>
+        </div>
+      </td>
+      <td className="px-3 py-3 text-center">
+        <div
+          className="flex items-center gap-1 px-2 py-1 rounded"
+          title="Energy"
+        >
+          <Zap className="w-3 h-3 text-muted-foreground" />
+          <span className="font-medium">{track.energy}%</span>
+        </div>
+      </td>
+    </>
   );
 }
 
@@ -121,24 +144,34 @@ function TableHeader({
   currentColumn,
   sortDirection,
   onClick,
+  width,
+  align = "left",
 }: {
   label: string;
   column: keyof Track;
   currentColumn?: keyof Track;
   sortDirection?: "asc" | "desc";
   onClick?: () => void;
+  width?: string;
+  align?: "left" | "center" | "right";
 }) {
   const isActive = currentColumn === column;
 
   return (
     <th
       className={cn(
-        "px-3 py-2 text-left text-xs font-medium uppercase tracking-wider",
-        onClick && "cursor-pointer hover:bg-accent select-none"
+        "px-3 py-2 text-left text-xs font-medium uppercase",
+        onClick && "cursor-pointer hover:bg-accent select-none",
       )}
       onClick={onClick}
+      style={{ width: width || "auto", textAlign: align }}
     >
-      <div className="flex items-center gap-1">
+      <div
+        className={cn("flex items-center gap-1", {
+          "justify-center": align === "center",
+          "justify-end": align === "right",
+        })}
+      >
         {label}
         <SortIcon
           column={column}
@@ -203,9 +236,31 @@ export function TrackList({
               onClick={() => onSort?.("album")}
             />
             <TableHeader
-              label="Audio Features"
+              label="Tempo"
               column="tempo"
               currentColumn={sortColumn}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("tempo")}
+              width="100px"
+              align="center"
+            />
+            <TableHeader
+              label="Dance"
+              column="danceability"
+              currentColumn={sortColumn}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("danceability")}
+              width="100px"
+              align="center"
+            />
+            <TableHeader
+              label="Energy"
+              column="energy"
+              currentColumn={sortColumn}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("energy")}
+              width="100px"
+              align="center"
             />
             <TableHeader
               label="Duration"
@@ -224,7 +279,7 @@ export function TrackList({
               className={cn(
                 "transition-colors",
                 showCheckboxes && "cursor-pointer hover:bg-accent",
-                selectedTracks.has(track.id) && "bg-accent/50"
+                selectedTracks.has(track.id) && "bg-accent/50",
               )}
             >
               {showCheckboxes && (
@@ -245,7 +300,9 @@ export function TrackList({
                   />
                 ) : (
                   <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                    <span className="text-muted-foreground text-xs">No img</span>
+                    <span className="text-muted-foreground text-xs">
+                      No img
+                    </span>
                   </div>
                 )}
               </td>
@@ -264,9 +321,8 @@ export function TrackList({
                   {track.album}
                 </p>
               </td>
-              <td className="px-3 py-3">
-                <AudioFeatures track={track} onFetch={onFetchAudioFeatures} />
-              </td>
+              <AudioFeatures track={track} onFetch={onFetchAudioFeatures} />
+
               <td className="px-3 py-3 text-sm text-muted-foreground text-right whitespace-nowrap">
                 {formatDuration(track.duration)}
               </td>

@@ -6,8 +6,11 @@ import { Header } from "@/components/header";
 import { SearchPanel } from "@/components/search-panel";
 import { Music } from "lucide-react";
 import type { Playlist, Track } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SearchPage() {
+  const { toast } = useToast();
+
   const { isAuthenticated, isLoading: isSessionLoading } = useSession();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -39,12 +42,18 @@ export default function SearchPage() {
           body: JSON.stringify({ trackUris: tracks.map((t) => t.uri) }),
         });
         fetchPlaylists();
+
+        toast({
+          title: "Tracks added successfully",
+          description: `Added ${tracks.length} track(s) to playlist`,
+          variant: "success",
+        });
       } catch (error) {
         console.error("Failed to add tracks:", error);
         throw error;
       }
     },
-    [fetchPlaylists]
+    [fetchPlaylists],
   );
 
   if (isSessionLoading) {
@@ -73,8 +82,9 @@ export default function SearchPage() {
               Find Songs by BPM
             </h1>
             <p className="text-lg text-muted-foreground mb-8 text-pretty">
-              Search for tracks by tempo, build the perfect playlist for your workout,
-              run, or dance party. Connect your Spotify account to get started.
+              Search for tracks by tempo, build the perfect playlist for your
+              workout, run, or dance party. Connect your Spotify account to get
+              started.
             </p>
             <a
               href="/api/auth/login"
