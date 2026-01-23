@@ -1,6 +1,5 @@
+import { RECCOBEATS_API_BASE } from "@/lib/env";
 import { NextResponse } from "next/server";
-
-const RECCOBEATS_API_BASE = "https://api.reccobeats.com/v1";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -22,7 +21,12 @@ export async function GET(request: Request) {
     const data = await response.json();
 
     const features = (data.content || []).map(
-      (f: { id: string; energy: number; danceability: number; tempo: number }) => ({
+      (f: {
+        id: string;
+        energy: number;
+        danceability: number;
+        tempo: number;
+      }) => ({
         id: f.id,
         tempo: f.tempo ? Math.round(f.tempo) : null,
         danceability: f.danceability ? Math.round(f.danceability * 100) : null,

@@ -5,8 +5,7 @@ import {
   updatePlaylistDetails,
   removeTracksFromPlaylist,
 } from "@/lib/spotify";
-
-const RECCOBEATS_API_BASE = "https://api.reccobeats.com/v1";
+import { RECCOBEATS_API_BASE } from "@/lib/env";
 
 export async function GET(
   _request: Request,

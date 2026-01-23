@@ -1,6 +1,5 @@
+import { RECCOBEATS_API_BASE } from "@/lib/env";
 import { NextResponse } from "next/server";
-
-const RECCOBEATS_API_BASE = "https://api.reccobeats.com/v1";
 
 export async function GET(
   request: Request,
@@ -26,11 +25,18 @@ export async function GET(
 
     return NextResponse.json({
       tempo: audioFeature.tempo ? Math.round(audioFeature.tempo) : null,
-      danceability: audioFeature.danceability ? Math.round(audioFeature.danceability * 100) : null,
-      energy: audioFeature.energy ? Math.round(audioFeature.energy * 100) : null,
+      danceability: audioFeature.danceability
+        ? Math.round(audioFeature.danceability * 100)
+        : null,
+      energy: audioFeature.energy
+        ? Math.round(audioFeature.energy * 100)
+        : null,
     });
   } catch (error) {
     console.error("Audio feature error:", error);
-    return NextResponse.json({ error: "Failed to get audio feature" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to get audio feature" },
+      { status: 500 },
+    );
   }
 }

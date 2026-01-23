@@ -1,7 +1,9 @@
-const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
-const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
-const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
-const RECCOBEATS_API_BASE = "https://api.reccobeats.com/v1";
+import {
+  RECCOBEATS_API_BASE,
+  SPOTIFY_AUTH_URL,
+  SPOTIFY_TOKEN_URL,
+  SPOTIFY_API_BASE,
+} from "./env";
 
 const SCOPES = [
   "user-read-private",
