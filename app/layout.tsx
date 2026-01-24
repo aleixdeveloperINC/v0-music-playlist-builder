@@ -10,6 +10,7 @@ import {
 } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
+import { AuthGuard } from "@/components/auth-guard";
 
 // Initialize fonts
 const montserrat = V0_Font_Montserrat({
@@ -53,7 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn("font-sans antialiased", montserrat.className)}>
-        {children}
+        <AuthGuard>
+          {children}
+        </AuthGuard>
         <Analytics />
         <Toaster />
       </body>
