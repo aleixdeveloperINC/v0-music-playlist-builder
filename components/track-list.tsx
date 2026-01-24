@@ -214,6 +214,7 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
           variant="ghost"
           size="icon"
           className="text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+          style={{ touchAction: "none" }}
           {...listeners}
         >
           <GripVertical className="w-4 h-4 flex-shrink-0" />
