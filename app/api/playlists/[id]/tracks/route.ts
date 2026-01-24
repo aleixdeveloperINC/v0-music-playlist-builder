@@ -23,7 +23,6 @@ export async function GET(
   try {
     const session = JSON.parse(sessionCookie);
     const spotifyResponse = await getPlaylistTracks(session.accessToken, id);
-    console.log("Spotify Response:", spotifyResponse);
 
     if (!spotifyResponse || !spotifyResponse.items) {
       console.error("Spotify response or items are missing:", spotifyResponse);
@@ -34,7 +33,6 @@ export async function GET(
     return NextResponse.json({ tracks: spotifyResponse.items.map((item: { track: Track }) => item.track) });
   } catch (error) {
     console.error("Error caught:", error);
-    console.error("Get playlist tracks error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
     return NextResponse.json({ error: "Failed to get playlist tracks" }, { status: 500 });
   }
 }

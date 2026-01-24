@@ -110,9 +110,7 @@ export default async function PlaylistDetailPage({
         // Check cache first
         let featuresData = audioFeaturesCache.get(trackIds);
         if (!featuresData) {
-          console.log(
-            `Fetching audio features for ${trackIds.length} tracks from API`,
-          );
+
           featuresData = await getReccobeatsAudioFeatures(trackIds);
           // Cache the result
           audioFeaturesCache.set(trackIds, featuresData);

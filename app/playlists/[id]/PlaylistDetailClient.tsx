@@ -48,7 +48,7 @@ export function PlaylistDetailClient({
   const [isLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof Track>();
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | undefined>(undefined);
 
   const fetchPlaylists = useCallback(async () => {
     try {
@@ -139,13 +139,20 @@ export function PlaylistDetailClient({
   };
   const handleSort = useCallback(
     (column: keyof Track) => {
-      if (sortColumn === column) {
-        // Toggle direction if same column
-        setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-      } else {
+      if (sortColumn !== column) {
         // New column, set to asc
         setSortColumn(column);
         setSortDirection("asc");
+      } else {
+        // Same column, cycle through asc -> desc -> default
+        if (sortDirection === "asc") {
+          setSortDirection("desc");
+        } else if (sortDirection === "desc") {
+          setSortColumn(undefined); // Reset sort column
+          setSortDirection(undefined); // Reset sort direction to default (no sort)
+        } else { // Current state is effectively 'default' or undefined
+          setSortDirection("asc"); // Go to asc
+        }
       }
     },
     [sortColumn, sortDirection],
