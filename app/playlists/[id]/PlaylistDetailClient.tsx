@@ -5,7 +5,7 @@ import { useSession } from "@/hooks/use-session";
 import { Header } from "@/components/header";
 import { TrackList } from "@/components/track-list";
 import type { Playlist, Track } from "@/lib/types";
-import { Loader2, Music, ArrowLeft, Plus, Check } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Check, Music } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,8 +40,7 @@ export function PlaylistDetailClient({
   playlistId,
 }: PlaylistDetailClientProps) {
   const { toast } = useToast();
-
-  const { isAuthenticated, isLoading: isSessionLoading } = useSession();
+  const { isAuthenticated } = useSession();
   const [playlist, setPlaylist] = useState<Playlist | null>(initialPlaylist);
   const [tracks, setTracks] = useState<TrackWithoutFeatures[]>(initialTracks);
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
@@ -246,177 +245,135 @@ export function PlaylistDetailClient({
   }, [tracks, sortColumn, sortDirection]);
   const otherPlaylists = playlists.filter((p) => p.id !== playlistId);
 
-  if (isSessionLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-spotify/20 flex items-center justify-center mx-auto mb-4">
-            <Music className="w-8 h-8 text-spotify animate-pulse" />
-          </div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-16">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="w-24 h-24 rounded-full bg-spotify/20 flex items-center justify-center mx-auto mb-6">
-              <Music className="w-12 h-12 text-spotify" />
-            </div>
-            <h1 className="text-4xl font-bold text-foreground mb-4 text-balance">
-              Find Songs by BPM
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8 text-pretty">
-              Search for tracks by tempo, build the perfect playlist for your
-              workout, run, or dance party. Connect your Spotify account to get
-              started.
-            </p>
-            <a
-              href="/api/auth/login"
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-spotify text-primary-foreground hover:bg-spotify/90 h-11 px-8 text-lg"
-            >
-              Connect with Spotify
-            </a>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-6">
-        <Link
-          href="/playlists"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to playlists
-        </Link>
+      <Link
+        href="/playlists"
+        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to playlists
+      </Link>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : !playlist ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Playlist not found
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              {playlist.image ? (
-                <img
-                  src={playlist.image || "/placeholder.svg"}
-                  alt={playlist.name}
-                  className="w-24 h-24 rounded-lg object-cover"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center">
-                  <Music className="w-10 h-10 text-muted-foreground" />
-                </div>
-              )}
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Playlist</p>
-                <h1 className="text-2xl font-bold text-foreground">
-                  {playlist.name}
-                </h1>
-
-                <p className="text-sm text-muted-foreground mt-1">
-                  {tracks.length} tracks
-                </p>
-              </div>
-            </div>
-
-            {tracks.length > 0 && (
-              <div className="flex items-center justify-between border-b border-border pb-3">
-                <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="sm" onClick={handleSelectAll}>
-                    {selectedTracks.size === tracks.length ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        Deselect All
-                      </>
-                    ) : (
-                      "Select All"
-                    )}
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {selectedTracks.size} of {tracks.length} selected
-                  </span>
-                </div>
-                <div className="flex gap-4">
-                  <Button
-                    disabled={selectedTracks.size < 1 || isRemoving}
-                    size="sm"
-                    className="bg-destructive hover:bg-destructive/90 text-card"
-                    onClick={() =>
-                      handleRemoveTracks(Array.from(selectedTracks))
-                    }
-                  >
-                    {isRemoving ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Plus className="w-4 h-4 mr-2" />
-                    )}
-                    Remove tracks from Playlist
-                  </Button>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        disabled={selectedTracks.size === 0 || isAdding}
-                        size="sm"
-                        className="bg-spotify hover:bg-spotify/90 text-card"
-                      >
-                        {isAdding ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Plus className="w-4 h-4 mr-2" />
-                        )}
-                        Move to Playlist
-                      </Button>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent align="end" className="w-56">
-                      {otherPlaylists.length > 0 ? (
-                        otherPlaylists.map((playlist) => (
-                          <DropdownMenuItem
-                            key={playlist.id}
-                            onClick={() => handleAddToPlaylist(playlist.id)}
-                          >
-                            {playlist.name}
-                          </DropdownMenuItem>
-                        ))
-                      ) : (
-                        <p className="text-sm text-muted-foreground text-center py-2">
-                          No other playlists
-                        </p>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : !playlist ? (
+        <div className="text-center py-12 text-muted-foreground">
+          Playlist not found
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            {playlist.image ? (
+              <img
+                src={playlist.image || "/placeholder.svg"}
+                alt={playlist.name}
+                className="w-24 h-24 rounded-lg object-cover"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center">
+                <Music className="w-10 h-10 text-muted-foreground" />
               </div>
             )}
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Playlist</p>
+              <h1 className="text-2xl font-bold text-foreground">
+                {playlist.name}
+              </h1>
 
-            <TrackList
-              tracks={sortedTracks}
-              selectedTracks={selectedTracks}
-              onToggleTrack={handleToggleTrack}
-              showCheckboxes={true}
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-              onRemoveTracks={handleRemoveTracks}
-            />
+              <p className="text-sm text-muted-foreground mt-1">
+                {tracks.length} tracks
+              </p>
+            </div>
           </div>
-        )}
+
+          {tracks.length > 0 && (
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+                  {selectedTracks.size === tracks.length ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Deselect All
+                    </>
+                  ) : (
+                    "Select All"
+                  )}
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {selectedTracks.size} of {tracks.length} selected
+                </span>
+              </div>
+              <div className="flex gap-4">
+                <Button
+                  disabled={selectedTracks.size < 1 || isRemoving}
+                  size="sm"
+                  className="bg-destructive hover:bg-destructive/90 text-card"
+                  onClick={() =>
+                    handleRemoveTracks(Array.from(selectedTracks))
+                  }
+                >
+                  {isRemoving ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4 mr-2" />
+                  )}
+                  Remove tracks from Playlist
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      disabled={selectedTracks.size === 0 || isAdding}
+                      size="sm"
+                      className="bg-spotify hover:bg-spotify/90 text-card"
+                    >
+                      {isAdding ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
+                      Move to Playlist
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end" className="w-56">
+                    {otherPlaylists.length > 0 ? (
+                      otherPlaylists.map((playlist) => (
+                        <DropdownMenuItem
+                          key={playlist.id}
+                          onClick={() => handleAddToPlaylist(playlist.id)}
+                        >
+                          {playlist.name}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-2">
+                        No other playlists
+                      </p>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          )}
+
+          <TrackList
+            tracks={sortedTracks}
+            selectedTracks={selectedTracks}
+            onToggleTrack={handleToggleTrack}
+            showCheckboxes={true}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onRemoveTracks={handleRemoveTracks}
+          />
+        </div>
+      )}
       </main>
     </div>
   );
