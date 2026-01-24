@@ -6,6 +6,7 @@ import { Header } from "@/components/header";
 import { TrackList } from "@/components/track-list";
 import type { Playlist, Track } from "@/lib/types";
 import { Loader2, ArrowLeft, Plus, Check, Music } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
@@ -45,38 +45,10 @@ export function PlaylistDetailClient({
   const [tracks, setTracks] = useState<TrackWithoutFeatures[]>(initialTracks);
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof Track>();
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
-  /*  const fetchPlaylist = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/playlists/${playlistId}`);
-      const data = await response.json();
-
-      if (data.playlist) {
-        setPlaylist(data.playlist);
-      }
-      if (data.tracks) {
-        setTracks(
-          data.tracks.map((t: Track) => ({
-            ...t,
-            tempo: null,
-            danceability: null,
-            energy: null,
-            audioFeaturesLoading: false,
-            featuresError: false,
-          })),
-        );
-      }
-    } catch (error) {
-      console.error("Failed to fetch playlist:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [playlistId]); */
 
   const fetchPlaylists = useCallback(async () => {
     try {
@@ -184,7 +156,6 @@ export function PlaylistDetailClient({
 
     if (tracksToRemove.length === 0) return;
     try {
-      setIsRemoving(true);
       // Call the API to remove tracks
       await fetch(`/api/playlists/${playlistId}/tracks`, {
         method: "DELETE",
@@ -204,7 +175,6 @@ export function PlaylistDetailClient({
             : null,
         );
       }
-      setIsRemoving(false);
       toast({
         title: "Tracks removed successfully",
         description: `Removed ${tracksToRemove.length} ${tracksToRemove.length === 1 ? "track" : "tracks"} from playlist`,
@@ -218,8 +188,6 @@ export function PlaylistDetailClient({
           "An error occurred while removing tracks. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsRemoving(false);
     }
   };
 
@@ -249,81 +217,67 @@ export function PlaylistDetailClient({
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-6">
-      <Link
-        href="/playlists"
-        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to playlists
-      </Link>
+        <Link
+          href="/playlists"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to playlists
+        </Link>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : !playlist ? (
-        <div className="text-center py-12 text-muted-foreground">
-          Playlist not found
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            {playlist.image ? (
-              <img
-                src={playlist.image || "/placeholder.svg"}
-                alt={playlist.name}
-                className="w-24 h-24 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center">
-                <Music className="w-10 h-10 text-muted-foreground" />
-              </div>
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Playlist</p>
-              <h1 className="text-2xl font-bold text-foreground">
-                {playlist.name}
-              </h1>
-
-              <p className="text-sm text-muted-foreground mt-1">
-                {tracks.length} tracks
-              </p>
-            </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
+        ) : !playlist ? (
+          <div className="text-center py-12 text-muted-foreground">
+            Playlist not found
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              {playlist.image ? (
+                <Image
+                  src={playlist.image || "/placeholder.svg"}
+                  alt={playlist.name}
+                  width={96}
+                  height={96}
+                  className="w-24 h-24 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center">
+                  <Music className="w-10 h-10 text-muted-foreground" />
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Playlist</p>
+                <h1 className="text-2xl font-bold text-foreground">
+                  {playlist.name}
+                </h1>
 
-          {tracks.length > 0 && (
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={handleSelectAll}>
-                  {selectedTracks.size === tracks.length ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Deselect All
-                    </>
-                  ) : (
-                    "Select All"
-                  )}
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  {selectedTracks.size} of {tracks.length} selected
-                </span>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {tracks.length} tracks
+                </p>
               </div>
-              <div className="flex gap-4">
-                <Button
-                  disabled={selectedTracks.size < 1 || isRemoving}
-                  size="sm"
-                  className="bg-destructive hover:bg-destructive/90 text-card"
-                  onClick={() =>
-                    handleRemoveTracks(Array.from(selectedTracks))
-                  }
-                >
-                  {isRemoving ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4 mr-2" />
-                  )}
-                  Remove tracks from Playlist
-                </Button>
+            </div>
+
+            {tracks.length > 0 && (
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+                    {selectedTracks.size === tracks.length ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Deselect All
+                      </>
+                    ) : (
+                      "Select All"
+                    )}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedTracks.size} of {tracks.length} selected
+                  </span>
+                </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -359,21 +313,20 @@ export function PlaylistDetailClient({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            </div>
-          )}
+            )}
 
-          <TrackList
-            tracks={sortedTracks}
-            selectedTracks={selectedTracks}
-            onToggleTrack={handleToggleTrack}
-            showCheckboxes={true}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            onRemoveTracks={handleRemoveTracks}
-          />
-        </div>
-      )}
+            <TrackList
+              tracks={sortedTracks}
+              selectedTracks={selectedTracks}
+              onToggleTrack={handleToggleTrack}
+              showCheckboxes={true}
+              sortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={handleSort}
+              onRemoveTracks={handleRemoveTracks}
+            />
+          </div>
+        )}
       </main>
     </div>
   );

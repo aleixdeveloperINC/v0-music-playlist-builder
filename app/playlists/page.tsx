@@ -33,23 +33,6 @@ export default function PlaylistsPage() {
     }
   }, [isAuthenticated, fetchPlaylists]);
 
-  const handleAddToPlaylist = useCallback(
-    async (playlistId: string, tracks: Track[]) => {
-      try {
-        await fetch(`/api/playlists/${playlistId}/tracks`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ trackUris: tracks.map((t) => t.uri) }),
-        });
-        fetchPlaylists();
-      } catch (error) {
-        console.error("Failed to add tracks:", error);
-        throw error;
-      }
-    },
-    [fetchPlaylists],
-  );
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />

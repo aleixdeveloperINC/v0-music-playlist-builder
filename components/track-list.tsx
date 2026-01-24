@@ -12,6 +12,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
+import Image from "next/image";
 import { X } from "lucide-react";
 import {
   AlertDialog,
@@ -47,24 +48,32 @@ function formatDuration(ms: number) {
 function AudioFeatures({
   track,
   onFetch,
+  className,
 }: {
   track: Track;
   onFetch?: (trackId: string) => void;
+  className?: string;
 }) {
   const hasFeatures = track.tempo !== null;
 
   if (!hasFeatures && !onFetch) {
-    return (
-      <td colSpan={3} className="px-3 py-3 text-center">
-        <span className="text-muted-foreground text-xs">—</span>
-      </td>
-    );
+    <td
+      colSpan={3}
+      className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
+    >
+      <span className="text-muted-foreground text-xs">—</span>
+    </td>;
   }
 
   if (!hasFeatures) {
     if (track.featuresError) {
       return (
-        <td colSpan={3} className="px-3 py-3 text-center">
+        <td
+          colSpan={3}
+          className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
+        >
+          {" "}
+          {/* Applied className */}
           <span className="text-muted-foreground text-xs px-2 py-1 bg-muted/50 rounded">
             No features
           </span>
@@ -72,7 +81,10 @@ function AudioFeatures({
       );
     }
     return onFetch ? (
-      <td colSpan={3} className="px-3 py-3 text-center">
+      <td
+        colSpan={3}
+        className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
+      >
         <Button
           variant="outline"
           size="sm"
@@ -94,7 +106,10 @@ function AudioFeatures({
         </Button>
       </td>
     ) : (
-      <td colSpan={3} className="px-3 py-3 text-center">
+      <td
+        colSpan={3}
+        className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
+      >
         <span className="text-muted-foreground text-xs">—</span>
       </td>
     );
@@ -102,7 +117,7 @@ function AudioFeatures({
 
   return (
     <>
-      <td className="px-3 py-3 text-center">
+      <td className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}>
         <div
           className="flex items-center gap-1 px-2 py-1 rounded"
           title="Tempo"
@@ -111,7 +126,7 @@ function AudioFeatures({
           <span className="font-medium">{track.tempo}</span>
         </div>
       </td>
-      <td className="px-3 py-3 text-center">
+      <td className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}>
         <div
           className="flex items-center gap-1 px-2 py-1 rounded"
           title="Danceability"
@@ -120,7 +135,7 @@ function AudioFeatures({
           <span className="font-medium">{track.danceability}%</span>
         </div>
       </td>
-      <td className="px-3 py-3 text-center">
+      <td className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}>
         <div
           className="flex items-center gap-1 px-2 py-1 rounded"
           title="Energy"
@@ -160,6 +175,7 @@ function TableHeader({
   onClick,
   width,
   align = "left",
+  className,
 }: {
   label: string;
   column: keyof Track;
@@ -168,14 +184,14 @@ function TableHeader({
   onClick?: () => void;
   width?: string;
   align?: "left" | "center" | "right";
+  className?: string;
 }) {
-  const isActive = currentColumn === column;
-
   return (
     <th
       className={cn(
-        "px-3 py-2 text-left text-xs font-medium uppercase",
+        "px-2 py-1 sm:px-3 sm:py-2 text-left text-xs font-medium uppercase",
         onClick && "cursor-pointer hover:bg-accent select-none",
+        className,
       )}
       onClick={onClick}
       style={{ width: width || "auto", textAlign: align }}
@@ -222,34 +238,10 @@ export function TrackList({
         <thead className="sticky top-0 bg-background border-b border-border">
           <tr>
             {showCheckboxes && (
-              <th className="px-3 py-2 w-8">
+              <th className="px-2 py-1 sm:px-3 sm:py-2 w-8">
                 <span className="sr-only">Select</span>
               </th>
             )}
-            <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">
-              Cover
-            </th>
-            <TableHeader
-              label="Title"
-              column="name"
-              currentColumn={sortColumn}
-              sortDirection={sortDirection}
-              onClick={() => onSort?.("name")}
-            />
-            <TableHeader
-              label="Artist"
-              column="artists"
-              currentColumn={sortColumn}
-              sortDirection={sortDirection}
-              onClick={() => onSort?.("artists")}
-            />
-            <TableHeader
-              label="Album"
-              column="album"
-              currentColumn={sortColumn}
-              sortDirection={sortDirection}
-              onClick={() => onSort?.("album")}
-            />
             <TableHeader
               label="Tempo"
               column="tempo"
@@ -277,15 +269,43 @@ export function TrackList({
               width="100px"
               align="center"
             />
+            <th className="px-2 py-1 sm:px-3 sm:py-2 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell">
+              Cover
+            </th>
+            <TableHeader
+              label="Title"
+              column="name"
+              currentColumn={sortColumn}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("name")}
+            />
+            <TableHeader
+              label="Artist"
+              column="artists"
+              currentColumn={sortColumn}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("artists")}
+              width="40px"
+            />
+            <TableHeader
+              label="Album"
+              column="album"
+              currentColumn={sortColumn}
+              sortDirection={sortDirection}
+              onClick={() => onSort?.("album")}
+              className="hidden md:table-cell"
+            />
+
             <TableHeader
               label="Duration"
               column="duration"
               currentColumn={sortColumn}
               sortDirection={sortDirection}
               onClick={() => onSort?.("duration")}
+              className="hidden md:table-cell"
             />
             {onRemoveTracks && (
-              <th className="px-3 py-2 w-12">
+              <th className="px-2 py-1 sm:px-3 sm:py-2 w-12">
                 <span className="sr-only">Actions</span>
               </th>
             )}
@@ -303,7 +323,7 @@ export function TrackList({
               )}
             >
               {showCheckboxes && (
-                <td className="px-3 py-3">
+                <td className="px-2 py-2 sm:px-3 sm:py-3">
                   <Checkbox
                     checked={selectedTracks.has(track.id)}
                     onCheckedChange={() => onToggleTrack(track.id)}
@@ -311,11 +331,15 @@ export function TrackList({
                   />
                 </td>
               )}
-              <td className="px-3 py-3">
+              <AudioFeatures track={track} onFetch={onFetchAudioFeatures} />
+
+              <td className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
                 {track.albumImage ? (
-                  <img
+                  <Image
                     src={track.albumImage || "/placeholder.svg"}
                     alt={track.album}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded object-cover"
                   />
                 ) : (
@@ -326,28 +350,27 @@ export function TrackList({
                   </div>
                 )}
               </td>
-              <td className="px-3 py-3">
+              <td className="px-2 py-2 sm:px-3 sm:py-3">
                 <p className="font-medium text-foreground truncate max-w-[200px]">
                   {track.name}
                 </p>
               </td>
-              <td className="px-3 py-3">
+              <td className="px-2 py-2 sm:px-3 sm:py-3">
                 <p className="text-sm text-muted-foreground truncate max-w-[150px]">
                   {track.artists}
                 </p>
               </td>
-              <td className="px-3 py-3">
+              <td className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
                 <p className="text-sm text-muted-foreground truncate max-w-[150px]">
                   {track.album}
                 </p>
               </td>
-              <AudioFeatures track={track} onFetch={onFetchAudioFeatures} />
 
-              <td className="px-3 py-3 text-sm text-muted-foreground text-right whitespace-nowrap">
+              <td className="px-2 py-2 sm:px-3 sm:py-3 text-sm text-muted-foreground text-right whitespace-nowrap hidden md:table-cell">
                 {formatDuration(track.duration)}
               </td>
               {onRemoveTracks && (
-                <td className="px-3 py-3 text-center">
+                <td className="px-2 py-2 sm:px-3 sm:py-3 text-center">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
@@ -363,7 +386,7 @@ export function TrackList({
                       <AlertDialogHeader>
                         <AlertDialogTitle>Remove Track</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to remove "{track.name}" from
+                          Are you sure you want to remove &quot;{track.name}&quot; from
                           this playlist? This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

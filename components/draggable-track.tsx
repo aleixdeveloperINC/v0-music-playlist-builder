@@ -3,6 +3,7 @@
 import type { Track } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { GripVertical, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface DraggableTrackProps {
@@ -53,9 +54,11 @@ export function DraggableTrack({
       <span className="text-sm text-muted-foreground w-6">{index + 1}</span>
 
       {track.albumImage ? (
-        <img
+        <Image
           src={track.albumImage || "/placeholder.svg"}
           alt={track.album}
+          width={40}
+          height={40}
           className="w-10 h-10 rounded object-cover"
         />
       ) : (

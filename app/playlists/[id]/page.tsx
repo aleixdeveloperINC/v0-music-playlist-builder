@@ -4,10 +4,20 @@ import { PlaylistDetailClient } from "./PlaylistDetailClient";
 import type { Playlist, Track } from "@/lib/types";
 import { redirect } from "next/navigation";
 // Simple in-memory cache for audio features
+interface AudioFeaturesResponse {
+  content: {
+    id: string;
+    energy: number;
+    danceability: number;
+    tempo: number;
+    href?: string;
+  }[];
+}
+
 class AudioFeaturesCache {
-  private cache = new Map<string, { data: any; timestamp: number }>();
+  private cache = new Map<string, { data: AudioFeaturesResponse; timestamp: number }>();
   private readonly TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-  get(trackIds: string[]): any | null {
+  get(trackIds: string[]): AudioFeaturesResponse | null {
     const key = trackIds.sort().join(",");
     const cached = this.cache.get(key);
 
@@ -18,7 +28,7 @@ class AudioFeaturesCache {
 
     return null;
   }
-  set(trackIds: string[], data: any): void {
+  set(trackIds: string[], data: AudioFeaturesResponse): void {
     const key = trackIds.sort().join(",");
     this.cache.set(key, { data, timestamp: Date.now() });
     console.log(`Cached audio features for ${trackIds.length} tracks`);

@@ -43,12 +43,6 @@ export function SearchPanel({
 
   const initialQuery = searchParams.get("q") || "";
 
-  useEffect(() => {
-    if (initialQuery) {
-      handleSearch(initialQuery, false);
-    }
-  }, []);
-
   const handleSearch = useCallback(
     async (query: string, updateUrl = true) => {
       setIsSearching(true);
@@ -82,6 +76,13 @@ export function SearchPanel({
     },
     [router, pageSize],
   );
+
+  useEffect(() => {
+    if (initialQuery) {
+      handleSearch(initialQuery, false);
+    }
+  }, [handleSearch, initialQuery]);
+
 
   const fetchPage = useCallback(
     async (page: number) => {
@@ -180,12 +181,12 @@ export function SearchPanel({
           prev.map((t) =>
             t.id === trackId
               ? {
-                  ...t,
-                  tempo: data.tempo,
-                  danceability: data.danceability,
-                  energy: data.energy,
-                  audioFeaturesLoading: false,
-                }
+                ...t,
+                tempo: data.tempo,
+                danceability: data.danceability,
+                energy: data.energy,
+                audioFeaturesLoading: false,
+              }
               : t,
           ),
         );

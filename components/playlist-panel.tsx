@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { Playlist, Track } from "@/lib/types";
+import type { Playlist } from "@/lib/types";
 import { PlaylistSelector } from "./playlist-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

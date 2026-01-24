@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Pencil, Loader2, Music } from "lucide-react";
+import Image from "next/image";
 
 interface PlaylistEditorProps {
   playlist: Playlist;
@@ -126,9 +127,11 @@ export function PlaylistEditor({ playlist, onUpdate }: PlaylistEditorProps) {
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-4 pb-4 border-b border-border">
         {playlist.image ? (
-          <img
+          <Image
             src={playlist.image || "/placeholder.svg"}
             alt={playlist.name}
+            width={80}
+            height={80}
             className="w-20 h-20 rounded-lg object-cover"
           />
         ) : (

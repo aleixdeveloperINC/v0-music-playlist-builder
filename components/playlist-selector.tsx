@@ -4,6 +4,7 @@ import type { Playlist } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Plus, Music } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 interface PlaylistSelectorProps {
@@ -49,9 +50,11 @@ export function PlaylistSelector({
           )}
         >
           {playlist.image ? (
-            <img
+            <Image
               src={playlist.image || "/placeholder.svg"}
               alt={playlist.name}
+              width={40}
+              height={40}
               className="w-10 h-10 rounded object-cover"
             />
           ) : (

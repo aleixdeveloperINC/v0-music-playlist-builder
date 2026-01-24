@@ -11,7 +11,6 @@ export default function SearchPage() {
   const { toast } = useToast();
   const { isAuthenticated } = useSession();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const fetchPlaylists = useCallback(async () => {
     try {
@@ -27,31 +26,70 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPlaylists();
     }
   }, [isAuthenticated, fetchPlaylists]);
 
   const handleAddToPlaylist = useCallback(
-    async (playlistId: string, tracks: Track[]) => {
+    async (playlistId: string, tracksToAdd: Track[]) => {
       try {
-        await fetch(`/api/playlists/${playlistId}/tracks`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ trackUris: tracks.map((t) => t.uri) }),
-        });
-        fetchPlaylists();
+        // 1. Fetch existing tracks for the target playlist
+        const existingTracksResponse = await fetch(`/api/playlists/${playlistId}/tracks`);
+        const existingTracksData = await existingTracksResponse.json();
+        const existingTrackUris = new Set(existingTracksData.tracks.map((t: Track) => t.uri));
 
-        toast({
-          title: "Tracks added successfully",
-          description: `Added ${tracks.length} track(s) to playlist`,
-          variant: "success",
-        });
+        // 2. Filter out duplicate tracks
+        const uniqueTracksToAdd = tracksToAdd.filter(
+          (track) => !existingTrackUris.has(track.uri)
+        );
+
+        const duplicateTracks = tracksToAdd.filter(
+          (track) => existingTrackUris.has(track.uri)
+        );
+
+        if (uniqueTracksToAdd.length === 0 && duplicateTracks.length > 0) {
+          toast({
+            title: "No tracks added",
+            description: `${duplicateTracks.length} selected track(s) already exist in this playlist.`,
+            variant: "warning",
+          });
+          return; // Exit if all are duplicates
+        }
+
+        if (uniqueTracksToAdd.length > 0) {
+          await fetch(`/api/playlists/${playlistId}/tracks`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ trackUris: uniqueTracksToAdd.map((t) => t.uri) }),
+          });
+          fetchPlaylists(); // Refresh playlists after adding
+
+          let toastTitle = "Tracks added successfully";
+          let toastDescription = `Added ${uniqueTracksToAdd.length} track(s) to playlist.`;
+
+          if (duplicateTracks.length > 0) {
+            toastTitle = "Some tracks already existed";
+            toastDescription += ` ${duplicateTracks.length} selected track(s) were already in this playlist and were not added again.`;
+          }
+
+          toast({
+            title: toastTitle,
+            description: toastDescription,
+            variant: "success",
+          });
+        }
       } catch (error) {
         console.error("Failed to add tracks:", error);
+        toast({
+          title: "Failed to add tracks",
+          description: "An error occurred while adding tracks to the playlist.",
+          variant: "destructive",
+        });
         throw error;
       }
     },
-    [fetchPlaylists],
+    [fetchPlaylists, toast]
   );
 
   return (
@@ -62,7 +100,7 @@ export default function SearchPage() {
           playlists={playlists}
           onAddToPlaylist={handleAddToPlaylist}
           onCreatePlaylist={() => {
-            setIsCreateDialogOpen(true);
+            // TODO: Implement create playlist functionality
           }}
           onPlaylistsUpdate={fetchPlaylists}
         />
