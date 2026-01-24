@@ -163,6 +163,24 @@ export async function getPlaylist(accessToken: string, playlistId: string) {
   return response.json();
 }
 
+export async function getPlaylistTracks(
+  accessToken: string,
+  playlistId: string,
+) {
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to get playlist tracks");
+  }
+
+  return response.json();
+}
+
 export async function createPlaylist(
   accessToken: string,
   userId: string,

@@ -4,7 +4,31 @@ import {
   addTracksToPlaylist,
   removeTracksFromPlaylist,
   reorderPlaylistTracks,
+  getPlaylistTracks,
 } from "@/lib/spotify";
+import type { Track } from "@/lib/types";
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get("spotify_session")?.value;
+
+  if (!sessionCookie) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  try {
+    const session = JSON.parse(sessionCookie);
+    const spotifyResponse = await getPlaylistTracks(session.accessToken, id);
+    return NextResponse.json({ tracks: spotifyResponse.items.map((item: { track: Track }) => item.track) });
+  } catch (error) {
+    console.error("Get playlist tracks error:", error);
+    return NextResponse.json({ error: "Failed to get playlist tracks" }, { status: 500 });
+  }
+}
 
 export async function POST(
   request: Request,
