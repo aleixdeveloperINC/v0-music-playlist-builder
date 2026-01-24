@@ -364,7 +364,7 @@ export function TrackList({
 }: TrackListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(TouchSensor),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5, preventDefault: true } }),
     useSensor(KeyboardSensor),
   );
 
