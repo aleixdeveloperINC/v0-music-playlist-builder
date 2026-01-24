@@ -6,6 +6,7 @@ import {
 } from "./env";
 
 const SCOPES = [
+  "streaming", // ?
   "user-read-private",
   "user-read-email",
   "playlist-read-private",
