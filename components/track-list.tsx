@@ -11,10 +11,11 @@ import {
   Music2,
   ArrowUp,
   ArrowDown,
+  GripVertical,
 } from "lucide-react";
 import Image from "next/image";
 import { X } from "lucide-react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, TouchSensor } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -76,8 +77,6 @@ function AudioFeatures({
           colSpan={3}
           className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
         >
-          {" "}
-          {/* Applied className */}
           <span className="text-muted-foreground text-xs px-2 py-1 bg-muted/50 rounded">
             No features
           </span>
@@ -188,7 +187,7 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: track.id });
+  } = useSortable({ id: track.id, listeners: false });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -202,7 +201,6 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       key={track.id}
       onClick={() => showCheckboxes && onToggleTrack(track.id)}
       className={cn(
@@ -211,8 +209,18 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
         selectedTracks.has(track.id) && "bg-accent/50",
       )}
     >
+      <td key={`${track.id}-drag-handle`} className="px-2 py-2 sm:px-3 sm:py-3 w-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+          {...listeners}
+        >
+          <GripVertical className="w-4 h-4 flex-shrink-0" />
+        </Button>
+      </td>
       {showCheckboxes && (
-        <td className="px-2 py-2 sm:px-3 sm:py-3">
+        <td key={`${track.id}-checkbox`} className={cn("px-2 py-2 sm:px-3 sm:py-3")}>
           <Checkbox
             checked={selectedTracks.has(track.id)}
             onCheckedChange={() => onToggleTrack(track.id)}
@@ -220,9 +228,9 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
           />
         </td>
       )}
-      <AudioFeatures track={track} onFetch={onFetchAudioFeatures} />
+      <AudioFeatures key={`${track.id}-audio-features`} track={track} onFetch={onFetchAudioFeatures} />
 
-      <td className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
+      <td key={`${track.id}-album-image`} className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
         {track.albumImage ? (
           <Image
             src={track.albumImage || "/placeholder.svg"}
@@ -232,34 +240,34 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
             className="w-10 h-10 rounded object-cover"
           />
         ) : (
-          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+          <span className="w-10 h-10 rounded bg-muted flex items-center justify-center">
             <span className="text-muted-foreground text-xs">
               No img
             </span>
-          </div>
+          </span>
         )}
       </td>
-      <td className="px-2 py-2 sm:px-3 sm:py-3">
+      <td key={`${track.id}-track-name`} className="px-2 py-2 sm:px-3 sm:py-3">
         <p className="font-medium text-foreground truncate max-w-[200px]">
           {track.name}
         </p>
       </td>
-      <td className="px-2 py-2 sm:px-3 sm:py-3">
+      <td key={`${track.id}-track-artists`} className="px-2 py-2 sm:px-3 sm:py-3">
         <p className="text-sm text-muted-foreground truncate max-w-[150px]">
           {track.artists}
         </p>
       </td>
-      <td className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
+      <td key={`${track.id}-track-album`} className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
         <p className="text-sm text-muted-foreground truncate max-w-[150px]">
           {track.album}
         </p>
       </td>
 
-      <td className="px-2 py-2 sm:px-3 sm:py-3 text-sm text-muted-foreground text-right whitespace-nowrap hidden md:table-cell">
+      <td key={`${track.id}-track-duration`} className="px-2 py-2 sm:px-3 sm:py-3 text-sm text-muted-foreground text-right whitespace-nowrap hidden md:table-cell">
         {formatDuration(track.duration)}
       </td>
       {onRemoveTracks && (
-        <td className="px-2 py-2 sm:px-3 sm:py-3 text-center">
+        <td key={`${track.id}-remove-track`} className="px-2 py-2 sm:px-3 sm:py-3 text-center">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
@@ -325,7 +333,7 @@ function TableHeader({
       onClick={onClick}
       style={{ width: width || "auto", textAlign: align }}
     >
-      <div
+      <span
         className={cn("flex items-center gap-1", {
           "justify-center": align === "center",
           "justify-end": align === "right",
@@ -337,7 +345,7 @@ function TableHeader({
           currentColumn={currentColumn}
           direction={sortDirection}
         />
-      </div>
+      </span>
     </th>
   );
 }
@@ -356,6 +364,7 @@ export function TrackList({
 }: TrackListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
+    useSensor(TouchSensor),
     useSensor(KeyboardSensor),
   );
 

@@ -70,6 +70,7 @@ export function PlaylistDetailClient({
   }, [isAuthenticated, fetchPlaylists]);
 
   const handleToggleTrack = useCallback((trackId: string) => {
+    console.log("Toggling track:", trackId);
     setSelectedTracks((prev) => {
       const next = new Set(prev);
       if (next.has(trackId)) {
@@ -160,6 +161,7 @@ export function PlaylistDetailClient({
   );
 
   const handleRemoveTracks = async (trackIds: string[]) => {
+    console.log("Attempting to remove tracks:", trackIds);
     const tracksToRemove = tracks.filter((t) => trackIds.includes(t.id));
 
     if (tracksToRemove.length === 0) return;
@@ -170,6 +172,7 @@ export function PlaylistDetailClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ trackUris: tracksToRemove.map((t) => t.uri) }),
       });
+      console.log("Tracks removed from API:", trackIds);
       // Remove tracks from local state
       setTracks((prevTracks) =>
         prevTracks.filter((track) => !trackIds.includes(track.id)),
