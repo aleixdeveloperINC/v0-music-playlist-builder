@@ -37,7 +37,7 @@ export default function SearchPage() {
         // 1. Fetch existing tracks for the target playlist
         const existingTracksResponse = await fetch(`/api/playlists/${playlistId}/tracks`);
         const existingTracksData = await existingTracksResponse.json();
-        const existingTrackUris = new Set(existingTracksData.tracks.map((t: Track) => t.uri));
+        const existingTrackUris = new Set(existingTracksData.tracks?.map((t: Track) => t.uri) || []);
 
         // 2. Filter out duplicate tracks
         const uniqueTracksToAdd = tracksToAdd.filter(

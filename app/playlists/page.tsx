@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useSession } from "@/hooks/use-session";
 import { Header } from "@/components/header";
 import { PlaylistPanel } from "@/components/playlist-panel";
-import type { Playlist, Track } from "@/lib/types";
+import type { Playlist } from "@/lib/types";
 
 export default function PlaylistsPage() {
   const { isAuthenticated } = useSession();

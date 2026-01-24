@@ -5,7 +5,6 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import {
   Montserrat as V0_Font_Montserrat,
-  Geist_Mono as V0_Font_Geist_Mono,
 } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
