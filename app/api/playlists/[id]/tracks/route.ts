@@ -10,9 +10,9 @@ import type { Track } from "@/lib/types";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params: rawParams }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await rawParams;
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("spotify_session")?.value;
 
@@ -30,6 +30,7 @@ export async function GET(
       return NextResponse.json({ error: "Failed to get playlist tracks: Invalid Spotify response" }, { status: 500 });
     }
 
+
     return NextResponse.json({ tracks: spotifyResponse.items.map((item: { track: Track }) => item.track) });
   } catch (error) {
     console.error("Error caught:", error);
@@ -40,9 +41,9 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params: rawParams }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await rawParams;
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("spotify_session")?.value;
 
@@ -69,9 +70,9 @@ export async function POST(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params: rawParams }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await rawParams;
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("spotify_session")?.value;
 
@@ -98,9 +99,9 @@ export async function DELETE(
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params: rawParams }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await rawParams;
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("spotify_session")?.value;
 

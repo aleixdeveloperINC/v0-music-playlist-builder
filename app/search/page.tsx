@@ -17,6 +17,7 @@ export default function SearchPage() {
       const response = await fetch("/api/playlists");
       const data = await response.json();
       if (data.playlists) {
+
         setPlaylists(data.playlists);
       }
     } catch (error) {
