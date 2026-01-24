@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { arrayMove } from "@dnd-kit/sortable";
 
 interface TrackWithoutFeatures extends Omit<
   Track,
@@ -198,6 +199,53 @@ export function PlaylistDetailClient({
     }
   };
 
+  const handleReorder = useCallback(async (activeId: string, overId: string) => {
+    const oldIndex = tracks.findIndex((track) => track.id === activeId);
+    const newIndex = tracks.findIndex((track) => track.id === overId);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      console.error("Reorder failed: track not found.");
+      return;
+    }
+
+    // Update local state immediately for a smoother UX
+    const newTracks = arrayMove(tracks, oldIndex, newIndex);
+    setTracks(newTracks);
+
+    // Determine Spotify API parameters
+    const rangeStart = oldIndex;
+    let insertBefore = newIndex;
+
+    // Spotify's reorder API is 0-indexed.
+    // If moving down, `insertBefore` needs to be incremented because `insertBefore` is the position *before* which the tracks are inserted.
+    // If moving up, `insertBefore` is already the correct target index.
+    if (oldIndex < newIndex) {
+      insertBefore += 1;
+    }
+
+    try {
+      await fetch(`/api/playlists/${playlistId}/tracks`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rangeStart, insertBefore }),
+      });
+      toast({
+        title: "Playlist reordered",
+        description: "Track order updated successfully on Spotify.",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("Failed to reorder tracks:", error);
+      toast({
+        title: "Reorder failed",
+        description: "An error occurred while reordering tracks. Please try again.",
+        variant: "destructive",
+      });
+      // Optionally revert local state on API failure
+      setTracks(tracks);
+    }
+  }, [tracks, playlistId, toast]);
+
   const sortedTracks = useMemo(() => {
     if (!sortColumn) return tracks;
     return [...tracks].sort((a, b) => {
@@ -331,6 +379,7 @@ export function PlaylistDetailClient({
               sortDirection={sortDirection}
               onSort={handleSort}
               onRemoveTracks={handleRemoveTracks}
+              onReorder={handleReorder}
             />
           </div>
         )}

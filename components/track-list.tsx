@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +40,7 @@ interface TrackListProps {
   onSort?: (column: keyof Track) => void;
   onRemoveTracks?: (trackIds: string[]) => void;
   playlistId?: string;
+  onReorder?: (activeId: string, overId: string) => void;
 }
 
 function formatDuration(ms: number) {
@@ -167,6 +171,131 @@ function SortIcon({
   );
 }
 
+interface SortableRowProps {
+  track: Track;
+  showCheckboxes: boolean;
+  selectedTracks: Set<string>;
+  onToggleTrack: (trackId: string) => void;
+  onFetchAudioFeatures?: (trackId: string) => void;
+  onRemoveTracks?: (trackIds: string[]) => void;
+}
+
+function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks }: SortableRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: track.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 1 : 0, // Keep dragging item on top
+    position: isDragging ? 'relative' : 'static', // Add position if dragging to enable zIndex
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      key={track.id}
+      onClick={() => showCheckboxes && onToggleTrack(track.id)}
+      className={cn(
+        "transition-colors",
+        showCheckboxes && "cursor-grab hover:bg-accent",
+        selectedTracks.has(track.id) && "bg-accent/50",
+      )}
+    >
+      {showCheckboxes && (
+        <td className="px-2 py-2 sm:px-3 sm:py-3">
+          <Checkbox
+            checked={selectedTracks.has(track.id)}
+            onCheckedChange={() => onToggleTrack(track.id)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </td>
+      )}
+      <AudioFeatures track={track} onFetch={onFetchAudioFeatures} />
+
+      <td className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
+        {track.albumImage ? (
+          <Image
+            src={track.albumImage || "/placeholder.svg"}
+            alt={track.album}
+            width={40}
+            height={40}
+            className="w-10 h-10 rounded object-cover"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+            <span className="text-muted-foreground text-xs">
+              No img
+            </span>
+          </div>
+        )}
+      </td>
+      <td className="px-2 py-2 sm:px-3 sm:py-3">
+        <p className="font-medium text-foreground truncate max-w-[200px]">
+          {track.name}
+        </p>
+      </td>
+      <td className="px-2 py-2 sm:px-3 sm:py-3">
+        <p className="text-sm text-muted-foreground truncate max-w-[150px]">
+          {track.artists}
+        </p>
+      </td>
+      <td className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
+        <p className="text-sm text-muted-foreground truncate max-w-[150px]">
+          {track.album}
+        </p>
+      </td>
+
+      <td className="px-2 py-2 sm:px-3 sm:py-3 text-sm text-muted-foreground text-right whitespace-nowrap hidden md:table-cell">
+        {formatDuration(track.duration)}
+      </td>
+      {onRemoveTracks && (
+        <td className="px-2 py-2 sm:px-3 sm:py-3 text-center">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove Track</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to remove &quot;{track.name}&quot; from
+                  this playlist? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onRemoveTracks([track.id])}
+                  className="bg-destructive hover:bg-destructive/90"
+                >
+                  Remove
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </td>
+      )}
+    </tr>
+  );
+}
+
 function TableHeader({
   label,
   column,
@@ -223,7 +352,21 @@ export function TrackList({
   sortDirection,
   onSort,
   onRemoveTracks,
+  onReorder,
 }: TrackListProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      onReorder?.(active.id.toString(), over?.id.toString() || '');
+    }
+  }
+
   if (tracks.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -311,101 +454,30 @@ export function TrackList({
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">
-          {tracks.map((track) => (
-            <tr
-              key={track.id}
-              onClick={() => showCheckboxes && onToggleTrack(track.id)}
-              className={cn(
-                "transition-colors",
-                showCheckboxes && "cursor-pointer hover:bg-accent",
-                selectedTracks.has(track.id) && "bg-accent/50",
-              )}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <tbody className="divide-y divide-border">
+            <SortableContext
+              items={tracks.map((track) => track.id)}
+              strategy={verticalListSortingStrategy}
             >
-              {showCheckboxes && (
-                <td className="px-2 py-2 sm:px-3 sm:py-3">
-                  <Checkbox
-                    checked={selectedTracks.has(track.id)}
-                    onCheckedChange={() => onToggleTrack(track.id)}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </td>
-              )}
-              <AudioFeatures track={track} onFetch={onFetchAudioFeatures} />
-
-              <td className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
-                {track.albumImage ? (
-                  <Image
-                    src={track.albumImage || "/placeholder.svg"}
-                    alt={track.album}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                    <span className="text-muted-foreground text-xs">
-                      No img
-                    </span>
-                  </div>
-                )}
-              </td>
-              <td className="px-2 py-2 sm:px-3 sm:py-3">
-                <p className="font-medium text-foreground truncate max-w-[200px]">
-                  {track.name}
-                </p>
-              </td>
-              <td className="px-2 py-2 sm:px-3 sm:py-3">
-                <p className="text-sm text-muted-foreground truncate max-w-[150px]">
-                  {track.artists}
-                </p>
-              </td>
-              <td className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
-                <p className="text-sm text-muted-foreground truncate max-w-[150px]">
-                  {track.album}
-                </p>
-              </td>
-
-              <td className="px-2 py-2 sm:px-3 sm:py-3 text-sm text-muted-foreground text-right whitespace-nowrap hidden md:table-cell">
-                {formatDuration(track.duration)}
-              </td>
-              {onRemoveTracks && (
-                <td className="px-2 py-2 sm:px-3 sm:py-3 text-center">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Remove Track</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to remove &quot;{track.name}&quot; from
-                          this playlist? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => onRemoveTracks([track.id])}
-                          className="bg-destructive hover:bg-destructive/90"
-                        >
-                          Remove
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
+              {tracks.map((track) => (
+                <SortableRow
+                  key={track.id}
+                  track={track}
+                  showCheckboxes={showCheckboxes}
+                  selectedTracks={selectedTracks}
+                  onToggleTrack={onToggleTrack}
+                  onFetchAudioFeatures={onFetchAudioFeatures}
+                  onRemoveTracks={onRemoveTracks}
+                />
+              ))}
+            </SortableContext>
+          </tbody>
+        </DndContext>
       </table>
     </div>
   );
