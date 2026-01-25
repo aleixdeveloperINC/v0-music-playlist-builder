@@ -42,6 +42,7 @@ interface TrackListProps {
   onRemoveTracks?: (trackIds: string[]) => void;
   playlistId?: string;
   onReorder?: (activeId: string, overId: string) => void;
+  enableDragDrop?: boolean;
 }
 
 function formatDuration(ms: number) {
@@ -177,9 +178,10 @@ interface SortableRowProps {
   onToggleTrack: (trackId: string) => void;
   onFetchAudioFeatures?: (trackId: string) => void;
   onRemoveTracks?: (trackIds: string[]) => void;
+  enableDragDrop: boolean;
 }
 
-function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks }: SortableRowProps) {
+function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks, enableDragDrop }: SortableRowProps) {
   const {
     attributes,
     listeners,
@@ -187,13 +189,15 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: track.id, listeners: false });
+  } = useSortable({ 
+    id: track.id,
+    disabled: !enableDragDrop
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 1 : 0, // Keep dragging item on top
-    position: isDragging ? 'relative' : 'static', // Add position if dragging to enable zIndex
+    zIndex: isDragging ? 1 : 0,
   };
 
   return (
@@ -205,21 +209,23 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
       onClick={() => showCheckboxes && onToggleTrack(track.id)}
       className={cn(
         "transition-colors",
-        showCheckboxes && "cursor-grab hover:bg-accent",
+        showCheckboxes && enableDragDrop && "cursor-grab hover:bg-accent",
         selectedTracks.has(track.id) && "bg-accent/50",
       )}
     >
-      <td key={`${track.id}-drag-handle`} className="px-2 py-2 sm:px-3 sm:py-3 w-8">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
-          style={{ touchAction: "none" }}
-          {...listeners}
-        >
-          <GripVertical className="w-4 h-4 flex-shrink-0" />
-        </Button>
-      </td>
+      {enableDragDrop && (
+        <td key={`${track.id}-drag-handle`} className="px-2 py-2 sm:px-3 sm:py-3 w-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+            style={{ touchAction: "none" }}
+            {...listeners}
+          >
+            <GripVertical className="w-4 h-4 flex-shrink-0" />
+          </Button>
+        </td>
+      )}
       {showCheckboxes && (
         <td key={`${track.id}-checkbox`} className={cn("px-2 py-2 sm:px-3 sm:py-3")}>
           <Checkbox
@@ -362,10 +368,11 @@ export function TrackList({
   onSort,
   onRemoveTracks,
   onReorder,
+  enableDragDrop = false,
 }: TrackListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5, preventDefault: true } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor),
   );
 
@@ -390,6 +397,11 @@ export function TrackList({
       <table className="w-full">
         <thead className="sticky top-0 bg-background border-b border-border">
           <tr>
+            {enableDragDrop && (
+              <th className="px-2 py-1 sm:px-3 sm:py-2 w-8">
+                <span className="sr-only">Drag</span>
+              </th>
+            )}
             {showCheckboxes && (
               <th className="px-2 py-1 sm:px-3 sm:py-2 w-8">
                 <span className="sr-only">Select</span>
@@ -464,30 +476,48 @@ export function TrackList({
             )}
           </tr>
         </thead>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+        {enableDragDrop ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <tbody className="divide-y divide-border">
+              <SortableContext
+                items={tracks.map((track) => track.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {tracks.map((track) => (
+                  <SortableRow
+                    key={track.id}
+                    track={track}
+                    showCheckboxes={showCheckboxes}
+                    selectedTracks={selectedTracks}
+                    onToggleTrack={onToggleTrack}
+                    onFetchAudioFeatures={onFetchAudioFeatures}
+                    onRemoveTracks={onRemoveTracks}
+                    enableDragDrop={enableDragDrop}
+                  />
+                ))}
+              </SortableContext>
+            </tbody>
+          </DndContext>
+        ) : (
           <tbody className="divide-y divide-border">
-            <SortableContext
-              items={tracks.map((track) => track.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {tracks.map((track) => (
-                <SortableRow
-                  key={track.id}
-                  track={track}
-                  showCheckboxes={showCheckboxes}
-                  selectedTracks={selectedTracks}
-                  onToggleTrack={onToggleTrack}
-                  onFetchAudioFeatures={onFetchAudioFeatures}
-                  onRemoveTracks={onRemoveTracks}
-                />
-              ))}
-            </SortableContext>
+            {tracks.map((track) => (
+              <SortableRow
+                key={track.id}
+                track={track}
+                showCheckboxes={showCheckboxes}
+                selectedTracks={selectedTracks}
+                onToggleTrack={onToggleTrack}
+                onFetchAudioFeatures={onFetchAudioFeatures}
+                onRemoveTracks={onRemoveTracks}
+                enableDragDrop={enableDragDrop}
+              />
+            ))}
           </tbody>
-        </DndContext>
+        )}
       </table>
     </div>
   );

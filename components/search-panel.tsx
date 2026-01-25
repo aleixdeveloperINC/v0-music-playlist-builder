@@ -285,6 +285,7 @@ export function SearchPanel({
                 selectedTracks={selectedTracks}
                 onToggleTrack={handleToggleTrack}
                 onFetchAudioFeatures={handleFetchAudioFeatures}
+                enableDragDrop={false}
               />
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">

@@ -29,7 +29,13 @@ export function TapTempo() {
     const avgInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
 
     // Convert to BPM (60000 ms in a minute)
-    const calculatedBpm = 60000 / avgInterval;
+    let calculatedBpm = 60000 / avgInterval;
+
+    // If BPM is unreasonably high (double-tempo tapping), halve it
+    // Most music doesn't exceed 200 BPM, so if we get 300+, it's likely double-time
+    while (calculatedBpm > 200) {
+      calculatedBpm = calculatedBpm / 2;
+    }
 
     // Return rounded BPM
     return Math.round(calculatedBpm);
@@ -61,7 +67,7 @@ export function TapTempo() {
     setTapTimes((prevTimes) => {
       // Add new tap and keep only the last MAX_TAPS
       const newTimes = [...prevTimes, now].slice(-MAX_TAPS);
-      
+
       // Calculate and update BPM
       const newBpm = calculateBPM(newTimes);
       setBpm(newBpm);
@@ -93,9 +99,8 @@ export function TapTempo() {
     >
       {/* Pulse animation overlay */}
       <div
-        className={`absolute inset-0 bg-spotify/5 transition-opacity duration-200 ${
-          isPulsing ? "opacity-100" : "opacity-0"
-        }`}
+        className={`absolute inset-0 bg-spotify/5 transition-opacity duration-200 ${isPulsing ? "opacity-100" : "opacity-0"
+          }`}
       />
 
       {/* Main content */}
@@ -103,9 +108,8 @@ export function TapTempo() {
         {/* Icon */}
         <div className="relative">
           <div
-            className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-spotify/10 flex items-center justify-center transition-all duration-200 ${
-              isPulsing ? "scale-110 bg-spotify/20" : "scale-100"
-            }`}
+            className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-spotify/10 flex items-center justify-center transition-all duration-200 ${isPulsing ? "scale-110 bg-spotify/20" : "scale-100"
+              }`}
           >
             <Activity className="w-10 h-10 sm:w-12 sm:h-12 text-spotify" />
           </div>

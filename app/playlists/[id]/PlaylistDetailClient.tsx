@@ -380,6 +380,7 @@ export function PlaylistDetailClient({
               onSort={handleSort}
               onRemoveTracks={handleRemoveTracks}
               onReorder={handleReorder}
+              enableDragDrop={true}
             />
           </div>
         )}
