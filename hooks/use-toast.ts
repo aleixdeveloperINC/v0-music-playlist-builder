@@ -5,7 +5,7 @@ import * as React from "react";
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 4000;
+const TOAST_REMOVE_DELAY = 3000;
 
 type ToasterToast = ToastProps & {
   id: string;
@@ -23,21 +23,21 @@ function genId() {
 
 type Action =
   | {
-      type: "ADD_TOAST";
-      toast: ToasterToast;
-    }
+    type: "ADD_TOAST";
+    toast: ToasterToast;
+  }
   | {
-      type: "UPDATE_TOAST";
-      toast: Partial<ToasterToast>;
-    }
+    type: "UPDATE_TOAST";
+    toast: Partial<ToasterToast>;
+  }
   | {
-      type: "DISMISS_TOAST";
-      toastId?: ToasterToast["id"];
-    }
+    type: "DISMISS_TOAST";
+    toastId?: ToasterToast["id"];
+  }
   | {
-      type: "REMOVE_TOAST";
-      toastId?: ToasterToast["id"];
-    }
+    type: "REMOVE_TOAST";
+    toastId?: ToasterToast["id"];
+  }
 
 interface State {
   toasts: ToasterToast[];
@@ -95,9 +95,9 @@ export const reducer = (state: State, action: Action): State => {
         toasts: state.toasts.map((t) =>
           t.id === toastId || toastId === undefined
             ? {
-                ...t,
-                open: false,
-              }
+              ...t,
+              open: false,
+            }
             : t,
         ),
       };
