@@ -4,6 +4,7 @@ import type { Track } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PlayButton } from "@/components/ui/play-button";
 import {
   Loader2,
   Activity,
@@ -237,22 +238,33 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
       )}
       <AudioFeatures key={`${track.id}-audio-features`} track={track} onFetch={onFetchAudioFeatures} />
 
-      <td key={`${track.id}-album-image`} className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
-        {track.albumImage ? (
-          <Image
-            src={track.albumImage || "/placeholder.svg"}
-            alt={track.album}
-            width={40}
-            height={40}
-            className="w-10 h-10 rounded object-cover"
-          />
-        ) : (
-          <span className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-            <span className="text-muted-foreground text-xs">
-              No img
+      <td key={`${track.id}-album-image`} className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell group/image relative">
+        <div className="relative w-10 h-10 rounded overflow-hidden">
+          {track.albumImage ? (
+            <Image
+              src={track.albumImage || "/placeholder.svg"}
+              alt={track.album}
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="w-full h-full bg-muted flex items-center justify-center">
+              <span className="text-muted-foreground text-[10px]">
+                No img
+              </span>
             </span>
-          </span>
-        )}
+          )}
+
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+            <PlayButton
+              trackUris={[`spotify:track:${track.id}`]}
+              variant="ghost"
+              size="icon-sm"
+              className="text-white hover:text-white hover:bg-transparent h-8 w-8"
+            />
+          </div>
+        </div>
       </td>
       <td key={`${track.id}-track-name`} className="px-2 py-2 sm:px-3 sm:py-3">
         <p className="font-medium text-foreground truncate max-w-[200px]">

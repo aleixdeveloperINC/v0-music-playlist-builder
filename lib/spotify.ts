@@ -9,6 +9,7 @@ const SCOPES = [
   "streaming", // ?
   "user-read-private",
   "user-read-email",
+  "user-modify-playback-state", // Control playback on user's devices
   "playlist-read-private",
   "playlist-read-collaborative",
   "playlist-modify-public",
@@ -314,4 +315,51 @@ export async function getReccobeatsAudioFeatures(trackIds: string[]) {
   }
 
   return response.json();
+}
+
+/**
+ * Start playback on user's active Spotify device
+ * @param accessToken - User's Spotify access token
+ * @param contextUri - Spotify URI (playlist, album, artist)
+ * @param uris - Array of track URIs (for playing specific tracks)
+ * @param offset - Position to start playback from
+ */
+export async function startPlayback(
+  accessToken: string,
+  options: {
+    contextUri?: string; // e.g., "spotify:playlist:37i9dQZF1DXcBWIGoYBM5M"
+    uris?: string[]; // e.g., ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh"]
+    offset?: { position?: number; uri?: string };
+  } = {},
+) {
+  const body: any = {};
+
+  if (options.contextUri) {
+    body.context_uri = options.contextUri;
+  }
+
+  if (options.uris) {
+    body.uris = options.uris;
+  }
+
+  if (options.offset) {
+    body.offset = options.offset;
+  }
+
+  const response = await fetch(`${SPOTIFY_API_BASE}/me/player/play`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  // 204 No Content is success
+  if (!response.ok && response.status !== 204) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || "Failed to start playback");
+  }
+
+  return { success: true };
 }
