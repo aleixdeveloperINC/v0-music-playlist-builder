@@ -9,7 +9,6 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/components/auth-guard";
-import { PlayerProvider } from "@/components/player-provider";
 
 // Initialize fonts
 const montserrat = V0_Font_Montserrat({
@@ -50,7 +49,6 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn("font-sans antialiased", montserrat.className)}>
         <AuthGuard>
-          <PlayerProvider />
           {children}
         </AuthGuard>
         <Analytics />
