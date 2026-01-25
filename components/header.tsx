@@ -35,21 +35,21 @@ export function Header() {
 
   return (
     <>
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-spotify flex items-center justify-center">
-              <Music className="w-4 h-4 sm:w-5 sm:h-5 text-card" />
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 glass">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-spotify flex items-center justify-center shadow-lg shadow-spotify/20 group-hover:scale-105 transition-transform">
+              <Music className="w-5 h-5 text-black" />
             </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-foreground">BPM Finder</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Search by tempo</p>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold tracking-tighter leading-none">BPM Finder</h1>
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Beat Precision</span>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           {isAuthenticated && (
-            <nav className="hidden sm:flex items-center gap-1 mr-4">
+            <nav className="hidden md:flex items-center gap-1 p-1 bg-muted/50 rounded-full border border-white/5">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href;
@@ -57,9 +57,9 @@ export function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
-                      ? "bg-accent text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${isActive
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                       }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -70,74 +70,82 @@ export function Header() {
             </nav>
           )}
 
-          {/* User Menu - Desktop & Mobile */}
-          {isLoading ? (
-            <div className="h-8 w-20 sm:h-10 sm:w-24 rounded-md bg-muted animate-pulse" />
-          ) : isAuthenticated && user ? (
-            <div className="flex items-center gap-2">
-              {/* Mobile Menu Toggle */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="sm:hidden h-8 w-8 p-0"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-              </Button>
+          {/* User Menu */}
+          <div className="flex items-center gap-2">
+            {isLoading ? (
+              <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+            ) : isAuthenticated && user ? (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 border border-white/10">
+                      <Avatar className="h-full w-full">
+                        <AvatarImage src={user.image || "/placeholder.svg"} alt={user.name} />
+                        <AvatarFallback className="bg-spotify text-black font-bold">
+                          {user.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 mt-2 glass border-white/10">
+                    <div className="flex items-center justify-start gap-2 p-2 border-b border-white/5 mb-1">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 h-8 sm:h-10 px-2 sm:px-3">
-                    <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                      <AvatarImage src={user.image || "/placeholder.svg"} alt={user.name} />
-                      <AvatarFallback className="bg-spotify text-card text-xs sm:text-sm">
-                        {user.name?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden sm:inline text-sm font-medium">
-                      {user.name}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : (
-            <Button asChild className="bg-spotify hover:bg-spotify/90 text-card">
-              <a href="/api/auth/login">Connect Spotify</a>
-            </Button>
-          )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden h-10 w-10 rounded-full border border-white/10"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </Button>
+              </>
+            ) : (
+              <Button asChild className="bg-spotify hover:bg-spotify-hover text-black font-bold rounded-full px-6 shadow-lg shadow-spotify/20">
+                <a href="/api/auth/login">Connect Spotify</a>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* Mobile Navigation Menu */}
+      {/* Mobile Menu */}
       {isAuthenticated && isMobileMenuOpen && (
-        <div className="sm:hidden border-b border-border bg-card">
-          <nav className="container mx-auto px-4 py-2">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors w-full ${isActive
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                    }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
+        <div className="fixed inset-x-0 top-16 z-40 md:hidden animate-in slide-in-from-top duration-300">
+          <div className="bg-card/95 backdrop-blur-xl border-b border-white/10 p-4 shadow-2xl">
+            <nav className="flex flex-col gap-2">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-semibold transition-all ${isActive
+                      ? "bg-spotify text-black"
+                      : "text-muted-foreground hover:bg-white/5"
+                      }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         </div>
       )}
     </>

@@ -7,7 +7,7 @@ import { TrackList } from "./track-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Track, Playlist } from "@/lib/types";
-import { Plus, Check, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Check, Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -214,21 +214,35 @@ export function SearchPanel({
   const getEndIndex = () => Math.min(currentPage * pageSize, total);
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg">Search Tracks</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
+    <div className="h-full flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <section className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-gradient">
+            Find your rhythm.
+          </h2>
+          <p className="text-muted-foreground max-w-lg">
+            Search millions of tracks and discover their technical heart.
+            Build the perfect playlist for any pace.
+          </p>
+        </div>
+
         <SearchForm
           onSearch={handleSearch}
           isLoading={isSearching}
           initialQuery={initialQuery}
         />
+      </section>
 
-        {hasSearched && tracks.length > 0 && (
-          <div className="flex items-center justify-between border-b border-border pb-3">
+      {hasSearched && (
+        <div className="flex-1 flex flex-col gap-6 min-h-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass p-4 rounded-2xl border-white/10">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSelectAll}
+                className="rounded-full px-4"
+              >
                 {selectedTracks.size === tracks.length ? (
                   <>
                     <Check className="w-4 h-4 mr-2" />
@@ -238,111 +252,123 @@ export function SearchPanel({
                   "Select All"
                 )}
               </Button>
-              <span className="text-sm text-muted-foreground">
-                {selectedTracks.size} of {total} selected
+              <span className="text-sm font-medium">
+                <span className="text-spotify">{selectedTracks.size}</span>
+                <span className="text-muted-foreground"> selected</span>
               </span>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  disabled={selectedTracks.size === 0 || isAdding}
-                  size="sm"
-                  className="bg-spotify hover:bg-spotify/90 text-card"
-                >
-                  {isAdding ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4 mr-2" />
-                  )}
-                  Add to Playlist
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={onCreatePlaylist}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Playlist
-                </DropdownMenuItem>
-                {playlists.length > 0 && <DropdownMenuSeparator />}
-                {playlists.map((playlist) => (
-                  <DropdownMenuItem
-                    key={playlist.id}
-                    onClick={() => handleAddToPlaylist(playlist.id)}
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    disabled={selectedTracks.size === 0 || isAdding}
+                    size="sm"
+                    className="bg-spotify hover:bg-spotify-hover text-black font-bold rounded-full px-6 shadow-lg shadow-spotify/20"
                   >
-                    {playlist.name}
+                    {isAdding ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Plus className="w-4 h-4 mr-2" />
+                    )}
+                    Add to Playlist
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 glass border-white/10 mt-2">
+                  <DropdownMenuItem onClick={onCreatePlaylist} className="font-semibold">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create New
                   </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {hasSearched ? (
-            <>
-              <TrackList
-                tracks={tracks}
-                selectedTracks={selectedTracks}
-                onToggleTrack={handleToggleTrack}
-                onFetchAudioFeatures={handleFetchAudioFeatures}
-                enableDragDrop={false}
-              />
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      Showing {getStartIndex()}-{getEndIndex()} of {total}
-                    </span>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          {pageSize} per page
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start">
-                        {PAGE_SIZE_OPTIONS.map((size) => (
-                          <DropdownMenuItem
-                            key={size}
-                            onClick={() => handlePageSizeChange(size)}
-                            className={pageSize === size ? "bg-accent" : ""}
-                          >
-                            {size} per page
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
+                  {playlists.length > 0 && <DropdownMenuSeparator className="bg-white/5" />}
+                  {playlists.map((playlist) => (
+                    <DropdownMenuItem
+                      key={playlist.id}
+                      onClick={() => handleAddToPlaylist(playlist.id)}
                     >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span className="text-sm font-medium">
-                      {currentPage} / {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Search for tracks by name, artist, or album
+                      {playlist.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          )}
+          </div>
+
+          <div className="flex-1 overflow-hidden flex flex-col glass rounded-3xl border-white/10 shadow-2xl">
+            {tracks.length > 0 ? (
+              <>
+                <TrackList
+                  tracks={tracks}
+                  selectedTracks={selectedTracks}
+                  onToggleTrack={handleToggleTrack}
+                  onFetchAudioFeatures={handleFetchAudioFeatures}
+                  enableDragDrop={false}
+                />
+
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-white/5 gap-4">
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                        {getStartIndex()}-{getEndIndex()} of {total}
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 text-xs font-bold rounded-full">
+                            {pageSize} / page
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="glass border-white/10">
+                          {PAGE_SIZE_OPTIONS.map((size) => (
+                            <DropdownMenuItem
+                              key={size}
+                              onClick={() => handlePageSizeChange(size)}
+                              className={pageSize === size ? "bg-white/10" : ""}
+                            >
+                              {size} per page
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="rounded-full h-10 w-10 hover:bg-white/5"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </Button>
+                      <div className="px-4 py-1 bg-white/5 rounded-full border border-white/5">
+                        <span className="text-sm font-black">
+                          {currentPage} <span className="text-muted-foreground font-medium">/ {totalPages}</span>
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="rounded-full h-10 w-10 hover:bg-white/5"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full py-20 text-muted-foreground gap-4">
+                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center">
+                  <Search className="w-8 h-8 opacity-20" />
+                </div>
+                <p className="font-medium">No tracks matched your search.</p>
+              </div>
+            )}
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

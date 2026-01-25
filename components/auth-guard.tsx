@@ -35,7 +35,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
               started.
             </p>
             <SpotifyLoginButton />
-            
+
             <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
               <div className="p-4 rounded-lg bg-card border border-border">
                 <Search className="w-8 h-8 text-spotify mb-3" />

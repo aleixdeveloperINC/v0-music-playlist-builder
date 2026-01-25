@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Activity } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const RESET_TIMEOUT_MS = 3000; // Reset after 3 seconds of inactivity
 const MAX_TAPS = 10; // Keep last 10 taps for calculation
@@ -97,90 +98,103 @@ export function TapTempo() {
 
   return (
     <div
-      className="flex-1 flex flex-col items-center justify-center cursor-pointer select-none bg-gradient-to-br from-background via-background to-accent/10 relative overflow-hidden"
+      className="flex-1 flex flex-col items-center justify-center cursor-pointer select-none bg-background relative overflow-hidden"
       onClick={handleTap}
       onTouchStart={(e) => {
         e.preventDefault();
         handleTap();
       }}
     >
+      {/* Dynamic Background Gradient */}
+      <div
+        className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--spotify)_0%,transparent_70%)] opacity-0 transition-opacity duration-500"
+        style={{ opacity: bpm ? Math.min(bpm / 200, 0.15) : 0 }}
+      />
+
       {/* Pulse animation overlay */}
       <div
-        className={`absolute inset-0 bg-spotify/5 transition-opacity duration-200 ${isPulsing ? "opacity-100" : "opacity-0"
+        className={`absolute inset-0 bg-spotify/10 transition-opacity duration-300 ${isPulsing ? "opacity-100" : "opacity-0"
           }`}
       />
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center gap-8 px-4">
-        {/* Icon */}
+      <div className="relative z-10 flex flex-col items-center gap-12 px-4 w-full max-w-2xl">
+        {/* Icon / Status */}
         <div className="relative">
           <div
-            className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-spotify/10 flex items-center justify-center transition-all duration-200 ${isPulsing ? "scale-110 bg-spotify/20" : "scale-100"
+            className={`w-24 h-24 rounded-[2rem] glass flex items-center justify-center transition-all duration-300 border-white/10 ${isPulsing ? "scale-110 border-spotify/50 shadow-[0_0_40px_-10px_rgba(30,215,96,0.3)]" : "scale-100"
               }`}
           >
-            <Activity className="w-10 h-10 sm:w-12 sm:h-12 text-spotify" />
+            <Activity className={cn("w-10 h-10 transition-colors duration-300", bpm ? "text-spotify" : "text-muted-foreground/40")} />
           </div>
-          {/* Ripple effect */}
+          {/* Animated rings */}
           {isPulsing && (
-            <div className="absolute inset-0 rounded-full border-4 border-spotify/30 animate-ping" />
+            <>
+              <div className="absolute inset-0 rounded-[2rem] border-2 border-spotify/50 animate-ping" />
+              <div className="absolute inset-0 rounded-[2rem] border-2 border-spotify/30 animate-[ping_1.5s_ease-out_infinite]" />
+            </>
           )}
         </div>
 
         {/* BPM Display */}
         {bpm !== null ? (
-          <div className="text-center">
-            <div className="flex items-baseline justify-center gap-3">
-              <span className="text-7xl sm:text-9xl font-bold text-foreground tabular-nums tracking-tight">
+          <div className="text-center animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center">
+              <span className="text-[10rem] md:text-[14rem] font-black leading-none tracking-tighter text-foreground tabular-nums drop-shadow-2xl">
                 {bpm}
               </span>
-              <span className="text-3xl sm:text-4xl font-semibold text-muted-foreground pb-2">
-                BPM
-              </span>
+              <div className="flex items-center gap-4 -mt-2">
+                <div className="h-[2px] w-8 bg-spotify/50" />
+                <span className="text-2xl font-black uppercase tracking-[0.4em] text-spotify">
+                  BPM
+                </span>
+                <div className="h-[2px] w-8 bg-spotify/50" />
+              </div>
             </div>
-            <p className="text-sm sm:text-base text-muted-foreground mt-4">
-              Keep tapping to refine
+            <p className="text-muted-foreground/60 font-medium mt-12 tracking-widest uppercase text-[10px]">
+              Syncing with your heartbeat
             </p>
           </div>
         ) : (
-          <div className="text-center">
-            <h2 className="text-3xl sm:text-5xl font-bold text-foreground mb-3">
-              Tap Your Tempo
+          <div className="text-center space-y-6">
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-gradient leading-tight">
+              Tap the rhythm.
             </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-md">
-              Tap anywhere on the screen to find your running cadence
+            <p className="text-lg md:text-xl text-muted-foreground/80 max-w-md mx-auto font-medium">
+              Find the pulse of any track. Just tap anywhere on the screen to calculate its tempo.
             </p>
             {lastBpm !== null && (
-              <div className="mt-6 px-4 py-2 rounded-lg bg-muted/50 border border-border/50 inline-block">
-                <p className="text-xs text-muted-foreground mb-1">Last tempo</p>
-                <p className="text-2xl font-semibold text-foreground">
-                  {lastBpm} <span className="text-sm text-muted-foreground">BPM</span>
+              <div className="mt-12 glass p-6 rounded-3xl border-white/5 inline-block animate-in slide-in-from-bottom-4">
+                <p className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground mb-2">Previous Session</p>
+                <p className="text-4xl font-black text-foreground">
+                  {lastBpm} <span className="text-lg text-spotify ml-1">BPM</span>
                 </p>
               </div>
             )}
           </div>
         )}
 
-        {/* Tap count indicator */}
-        {tapTimes.length > 0 && (
-          <div className="flex gap-2 mt-4">
-            {Array.from({ length: Math.min(tapTimes.length, MAX_TAPS) }).map((_, i) => (
-              <div
-                key={i}
-                className="w-2 h-2 rounded-full bg-spotify transition-all duration-200"
-                style={{
-                  opacity: 1 - (i / MAX_TAPS) * 0.5,
-                }}
-              />
-            ))}
-          </div>
-        )}
+        {/* Tap indicators - Visualizing the queue */}
+        <div className="flex gap-3 h-2 items-center">
+          {Array.from({ length: MAX_TAPS }).map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "h-1.5 rounded-full transition-all duration-500",
+                i < tapTimes.length
+                  ? "w-8 bg-spotify shadow-[0_0_10px_rgba(30,215,96,0.5)]"
+                  : "w-1.5 bg-white/5"
+              )}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Instructions footer */}
-      <div className="absolute bottom-8 left-0 right-0 text-center px-4">
-        <p className="text-xs sm:text-sm text-muted-foreground/60">
-          Auto-resets after 3 seconds of inactivity
-        </p>
+      {/* Footer metadata */}
+      <div className="absolute bottom-12 flex flex-col items-center gap-2">
+        <div className="px-4 py-1.5 glass rounded-full border-white/5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+          Auto-reset active • 3s
+        </div>
       </div>
     </div>
   );

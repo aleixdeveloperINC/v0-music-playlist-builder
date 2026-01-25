@@ -4,16 +4,23 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import {
-  Montserrat as V0_Font_Montserrat,
+  Syne,
+  Inter,
 } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/components/auth-guard";
+import { ThemeProvider } from "@/components/theme-provider";
 
 // Initialize fonts
-const montserrat = V0_Font_Montserrat({
+const syne = Syne({
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-display",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
@@ -46,13 +53,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={cn("font-sans antialiased", montserrat.className)}>
-        <AuthGuard>
-          {children}
-        </AuthGuard>
-        <Analytics />
-        <Toaster />
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn("font-sans antialiased selection:bg-spotify/30", syne.variable, inter.variable)}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthGuard>
+            {children}
+          </AuthGuard>
+          <Analytics />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

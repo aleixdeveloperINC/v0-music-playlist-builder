@@ -63,12 +63,14 @@ function AudioFeatures({
   const hasFeatures = track.tempo !== null;
 
   if (!hasFeatures && !onFetch) {
-    <td
-      colSpan={3}
-      className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
-    >
-      <span className="text-muted-foreground text-xs">—</span>
-    </td>;
+    return (
+      <td
+        colSpan={3}
+        className={cn("px-4 py-4 text-center", className)}
+      >
+        <span className="text-muted-foreground/30 text-xs">—</span>
+      </td>
+    );
   }
 
   if (!hasFeatures) {
@@ -76,10 +78,10 @@ function AudioFeatures({
       return (
         <td
           colSpan={3}
-          className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
+          className={cn("px-4 py-4 text-center", className)}
         >
-          <span className="text-muted-foreground text-xs px-2 py-1 bg-muted/50 rounded">
-            No features
+          <span className="text-muted-foreground/50 text-[10px] uppercase tracking-tighter font-bold px-2 py-0.5 bg-white/5 rounded-full border border-white/5">
+            Missing
           </span>
         </td>
       );
@@ -87,65 +89,62 @@ function AudioFeatures({
     return onFetch ? (
       <td
         colSpan={3}
-        className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
+        className={cn("px-4 py-4 text-center", className)}
       >
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
             onFetch(track.id);
           }}
           disabled={track.audioFeaturesLoading}
-          className="h-7 px-3 text-xs"
+          className="h-8 px-4 text-[10px] uppercase tracking-widest font-black bg-spotify/10 text-spotify hover:bg-spotify/20 hover:text-spotify rounded-full"
         >
           {track.audioFeaturesLoading ? (
-            <>
-              <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-              Loading...
-            </>
+            <Loader2 className="w-3 h-3 animate-spin" />
           ) : (
-            "Get features"
+            "Analyze"
           )}
         </Button>
       </td>
     ) : (
       <td
         colSpan={3}
-        className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}
+        className={cn("px-4 py-4 text-center", className)}
       >
-        <span className="text-muted-foreground text-xs">—</span>
+        <span className="text-muted-foreground/30 text-xs">—</span>
       </td>
     );
   }
 
   return (
     <>
-      <td className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}>
+      <td className={cn("px-4 py-4 text-center", className)}>
         <div
-          className="flex items-center gap-1 px-2 py-1 rounded"
+          className="flex flex-col items-center justify-center"
           title="Tempo"
         >
-          <Music2 className="w-3 h-3 text-muted-foreground" />
-          <span className="font-medium">{track.tempo}</span>
+          <span className="text-sm font-black text-foreground tabular-nums tracking-tighter">{Math.round(track.tempo)}</span>
+          <span className="text-[8px] uppercase font-bold text-muted-foreground/60 leading-none">BPM</span>
         </div>
       </td>
-      <td className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}>
+      <td className={cn("px-4 py-4 text-center", className)}>
         <div
-          className="flex items-center gap-1 px-2 py-1 rounded"
+          className="flex flex-col items-center justify-center"
           title="Danceability"
         >
-          <Activity className="w-3 h-3 text-muted-foreground" />
-          <span className="font-medium">{track.danceability}%</span>
+          <span className="text-sm font-black text-foreground tabular-nums tracking-tighter">{track.danceability}%</span>
+          <span className="text-[8px] uppercase font-bold text-muted-foreground/60 leading-none">Dance</span>
         </div>
       </td>
-      <td className={cn("px-2 py-2 sm:px-3 sm:py-3 text-center", className)}>
+      <td className={cn("px-4 py-4 text-center", className)}>
         <div
-          className="flex items-center gap-1 px-2 py-1 rounded"
+          className="flex flex-col items-center justify-center"
           title="Energy"
         >
-          <Zap className="w-3 h-3 text-muted-foreground" />
-          <span className="font-medium">{track.energy}%</span>
+          <span className="text-sm font-black text-foreground tabular-nums tracking-tighter">{track.energy}%</span>
+          <span className="text-[8px] uppercase font-bold text-muted-foreground/60 leading-none">Energy</span>
         </div>
       </td>
     </>
@@ -197,7 +196,7 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 1 : 0,
+    zIndex: isDragging ? 10 : 0,
   };
 
   return (
@@ -208,17 +207,18 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
       key={track.id}
       onClick={() => showCheckboxes && onToggleTrack(track.id)}
       className={cn(
-        "transition-colors",
-        showCheckboxes && enableDragDrop && "cursor-grab hover:bg-accent",
-        selectedTracks.has(track.id) && "bg-accent/50",
+        "group transition-all duration-300 border-b border-white/5",
+        showCheckboxes && enableDragDrop && "cursor-grab",
+        isDragging && "bg-white/10 shadow-2xl scale-[1.02] border-spotify/50",
+        selectedTracks.has(track.id) ? "bg-spotify/10" : "hover:bg-white/5",
       )}
     >
       {enableDragDrop && (
-        <td key={`${track.id}-drag-handle`} className="px-2 py-2 sm:px-3 sm:py-3 w-8">
+        <td key={`${track.id}-drag-handle`} className="px-4 py-4 w-10">
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+            className="text-muted-foreground/30 group-hover:text-spotify cursor-grab active:cursor-grabbing transition-colors"
             style={{ touchAction: "none" }}
             {...listeners}
           >
@@ -227,78 +227,86 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
         </td>
       )}
       {showCheckboxes && (
-        <td key={`${track.id}-checkbox`} className={cn("px-2 py-2 sm:px-3 sm:py-3")}>
+        <td key={`${track.id}-checkbox`} className="px-4 py-4 w-10">
           <Checkbox
             checked={selectedTracks.has(track.id)}
             onCheckedChange={() => onToggleTrack(track.id)}
             onClick={(e) => e.stopPropagation()}
+            className="border-white/20 data-[state=checked]:bg-spotify data-[state=checked]:text-black"
           />
         </td>
       )}
       <AudioFeatures key={`${track.id}-audio-features`} track={track} onFetch={onFetchAudioFeatures} />
 
-      <td key={`${track.id}-album-image`} className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
-        {track.albumImage ? (
-          <Image
-            src={track.albumImage || "/placeholder.svg"}
-            alt={track.album}
-            width={40}
-            height={40}
-            className="w-10 h-10 rounded object-cover"
-          />
-        ) : (
-          <span className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-            <span className="text-muted-foreground text-xs">
-              No img
-            </span>
+      <td key={`${track.id}-album-image`} className="px-4 py-4 hidden md:table-cell w-20">
+        <div className="relative group/cover">
+          {track.albumImage ? (
+            <Image
+              src={track.albumImage || "/placeholder.svg"}
+              alt={track.album}
+              width={48}
+              height={48}
+              className="w-12 h-12 rounded-lg object-cover shadow-lg transition-transform group-hover/cover:scale-110"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center">
+              <Music2 className="w-6 h-6 text-muted-foreground/20" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover/cover:opacity-100 transition-opacity flex items-center justify-center">
+            <Music2 className="w-5 h-5 text-spotify" />
+          </div>
+        </div>
+      </td>
+      <td key={`${track.id}-track-name`} className="px-4 py-4">
+        <div className="flex flex-col">
+          <span className="font-bold text-foreground leading-tight group-hover:text-spotify transition-colors">
+            {track.name}
           </span>
-        )}
+          <span className="text-xs text-muted-foreground md:hidden mt-0.5">
+            {track.artists}
+          </span>
+        </div>
       </td>
-      <td key={`${track.id}-track-name`} className="px-2 py-2 sm:px-3 sm:py-3">
-        <p className="font-medium text-foreground truncate max-w-[200px]">
-          {track.name}
-        </p>
-      </td>
-      <td key={`${track.id}-track-artists`} className="px-2 py-2 sm:px-3 sm:py-3">
-        <p className="text-sm text-muted-foreground truncate max-w-[150px]">
+      <td key={`${track.id}-track-artists`} className="px-4 py-4 hidden md:table-cell">
+        <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground/80 transition-colors">
           {track.artists}
         </p>
       </td>
-      <td key={`${track.id}-track-album`} className="px-2 py-2 sm:px-3 sm:py-3 hidden md:table-cell">
-        <p className="text-sm text-muted-foreground truncate max-w-[150px]">
+      <td key={`${track.id}-track-album`} className="px-4 py-4 hidden lg:table-cell">
+        <p className="text-sm text-muted-foreground/60 truncate max-w-[150px]">
           {track.album}
         </p>
       </td>
 
-      <td key={`${track.id}-track-duration`} className="px-2 py-2 sm:px-3 sm:py-3 text-sm text-muted-foreground text-right whitespace-nowrap hidden md:table-cell">
+      <td key={`${track.id}-track-duration`} className="px-4 py-4 text-xs font-bold text-muted-foreground tabular-nums text-right hidden md:table-cell">
         {formatDuration(track.duration)}
       </td>
       {onRemoveTracks && (
-        <td key={`${track.id}-remove-track`} className="px-2 py-2 sm:px-3 sm:py-3 text-center">
+        <td key={`${track.id}-remove-track`} className="px-4 py-4 text-center">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
                 onClick={(e) => e.stopPropagation()}
               >
                 <X className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="glass border-white/10">
               <AlertDialogHeader>
-                <AlertDialogTitle>Remove Track</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to remove &quot;{track.name}&quot; from
-                  this playlist? This action cannot be undone.
+                <AlertDialogTitle className="font-black tracking-tighter text-2xl">Remove Track</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground">
+                  Are you sure you want to remove &quot;<span className="text-foreground font-bold">{track.name}</span>&quot;?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => onRemoveTracks([track.id])}
-                  className="bg-destructive hover:bg-destructive/90"
+                  className="bg-destructive hover:bg-destructive/90 rounded-full"
                 >
                   Remove
                 </AlertDialogAction>
