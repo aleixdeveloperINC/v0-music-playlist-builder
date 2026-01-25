@@ -113,9 +113,11 @@ export default async function PlaylistDetailPage({
 
           featuresData = await getReccobeatsAudioFeatures(trackIds);
           // Cache the result
-          audioFeaturesCache.set(trackIds, featuresData);
+          if (featuresData?.content) {
+            audioFeaturesCache.set(trackIds, featuresData);
+          }
         }
-        if (featuresData.content) {
+        if (featuresData?.content) {
           const featuresMap = new Map<
             string,
             {

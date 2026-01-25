@@ -10,6 +10,7 @@ const MIN_TAPS = 2; // Minimum taps needed to calculate BPM
 export function TapTempo() {
   const [tapTimes, setTapTimes] = useState<number[]>([]);
   const [bpm, setBpm] = useState<number | null>(null);
+  const [lastBpm, setLastBpm] = useState<number | null>(null);
   const [isPulsing, setIsPulsing] = useState(false);
   const resetTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -43,8 +44,14 @@ export function TapTempo() {
 
   // Reset function
   const resetTempo = useCallback(() => {
+    // Save current BPM before resetting
+    setBpm((currentBpm) => {
+      if (currentBpm !== null) {
+        setLastBpm(currentBpm);
+      }
+      return null;
+    });
     setTapTimes([]);
-    setBpm(null);
     if (resetTimerRef.current) {
       clearTimeout(resetTimerRef.current);
       resetTimerRef.current = null;
@@ -142,6 +149,14 @@ export function TapTempo() {
             <p className="text-base sm:text-lg text-muted-foreground max-w-md">
               Tap anywhere on the screen to find your running cadence
             </p>
+            {lastBpm !== null && (
+              <div className="mt-6 px-4 py-2 rounded-lg bg-muted/50 border border-border/50 inline-block">
+                <p className="text-xs text-muted-foreground mb-1">Last tempo</p>
+                <p className="text-2xl font-semibold text-foreground">
+                  {lastBpm} <span className="text-sm text-muted-foreground">BPM</span>
+                </p>
+              </div>
+            )}
           </div>
         )}
 
