@@ -4,7 +4,9 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import {
-  Syne,
+
+  Audiowide,
+  Big_Shoulders_Stencil,
   Inter,
 } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,9 +15,10 @@ import { AuthGuard } from "@/components/auth-guard";
 import { ThemeProvider } from "@/components/theme-provider";
 
 // Initialize fonts
-const syne = Syne({
+const displayFont = Audiowide({
   subsets: ["latin"],
   variable: "--font-display",
+  weight: '400'
 });
 
 const inter = Inter({
@@ -54,7 +57,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("font-sans antialiased selection:bg-spotify/30", syne.variable, inter.variable)}>
+      <body className={cn("font-sans antialiased selection:bg-spotify/30", displayFont.variable, inter.variable)}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
