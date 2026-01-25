@@ -189,7 +189,7 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
+  } = useSortable({
     id: track.id,
     disabled: !enableDragDrop
   });
@@ -392,7 +392,7 @@ export function TrackList({
     );
   }
 
-  return (
+  const tableContent = (
     <div className="flex-1 overflow-auto">
       <table className="w-full">
         <thead className="sticky top-0 bg-background border-b border-border">
@@ -476,35 +476,27 @@ export function TrackList({
             )}
           </tr>
         </thead>
-        {enableDragDrop ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <tbody className="divide-y divide-border">
-              <SortableContext
-                items={tracks.map((track) => track.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {tracks.map((track) => (
-                  <SortableRow
-                    key={track.id}
-                    track={track}
-                    showCheckboxes={showCheckboxes}
-                    selectedTracks={selectedTracks}
-                    onToggleTrack={onToggleTrack}
-                    onFetchAudioFeatures={onFetchAudioFeatures}
-                    onRemoveTracks={onRemoveTracks}
-                    enableDragDrop={enableDragDrop}
-                  />
-                ))}
-              </SortableContext>
-            </tbody>
-          </DndContext>
-        ) : (
-          <tbody className="divide-y divide-border">
-            {tracks.map((track) => (
+        <tbody className="divide-y divide-border">
+          {enableDragDrop ? (
+            <SortableContext
+              items={tracks.map((track) => track.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {tracks.map((track) => (
+                <SortableRow
+                  key={track.id}
+                  track={track}
+                  showCheckboxes={showCheckboxes}
+                  selectedTracks={selectedTracks}
+                  onToggleTrack={onToggleTrack}
+                  onFetchAudioFeatures={onFetchAudioFeatures}
+                  onRemoveTracks={onRemoveTracks}
+                  enableDragDrop={enableDragDrop}
+                />
+              ))}
+            </SortableContext>
+          ) : (
+            tracks.map((track) => (
               <SortableRow
                 key={track.id}
                 track={track}
@@ -515,10 +507,24 @@ export function TrackList({
                 onRemoveTracks={onRemoveTracks}
                 enableDragDrop={enableDragDrop}
               />
-            ))}
-          </tbody>
-        )}
+            ))
+          )}
+        </tbody>
       </table>
     </div>
   );
+
+  if (enableDragDrop) {
+    return (
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        {tableContent}
+      </DndContext>
+    );
+  }
+
+  return tableContent;
 }
