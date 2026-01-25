@@ -74,6 +74,10 @@
 }
 
 @layer base {
+  html {
+    @apply text-[14px] sm:text-base;
+  }
+
   * {
     @apply border-border outline-primary/20;
   }
@@ -103,20 +107,5 @@
 
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70;
-  }
-}
-
-
-@layer base {
-  html {
-    @apply text-[14px] sm:text-base;
-  }
-
-  * {
-    @apply border-border outline-primary/20;
-  }
-
-  body {
-    @apply bg-background text-foreground;
   }
 }
