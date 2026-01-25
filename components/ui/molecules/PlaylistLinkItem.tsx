@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Music, Play, Clock, ListMusic } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePlayer } from "@/hooks/use-player";
 
 
 type PlaylistLinkItemProps = {
@@ -16,6 +17,18 @@ type PlaylistLinkItemProps = {
 
 
 export const PlaylistLinkItem = ({ id, name, trackCount, image, index, duration = "2h 15m" }: PlaylistLinkItemProps) => {
+    const { playPlaylist } = usePlayer();
+
+    const handlePlayPlaylist = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        try {
+            await playPlaylist(`spotify:playlist:${id}`);
+        } catch (error) {
+            console.error("Failed to play playlist:", error);
+        }
+    };
 
     return (
         <Link
@@ -49,7 +62,10 @@ export const PlaylistLinkItem = ({ id, name, trackCount, image, index, duration 
                     <Music className="w-6 h-6 text-spotify" />
                 )}
                 {/* Play button overlay on hover */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <div 
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer"
+                    onClick={handlePlayPlaylist}
+                >
                     <Play className="w-5 h-5 text-white fill-white" />
                 </div>
             </div>

@@ -13,6 +13,7 @@ const SCOPES = [
   "playlist-read-collaborative",
   "playlist-modify-public",
   "playlist-modify-private",
+  "user-modify-playback-state",
 ].join(" ");
 
 export function getSpotifyAuthUrl(redirectUri: string, state: string): string {
@@ -311,6 +312,110 @@ export async function getReccobeatsAudioFeatures(trackIds: string[]) {
 
   if (!response.ok) {
     throw new Error("Failed to get Reccobeats audio features");
+  }
+
+  return response.json();
+}
+
+// Player control functions
+export async function getAvailableDevices(accessToken: string) {
+  const response = await fetch(`${SPOTIFY_API_BASE}/me/player/devices`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to get available devices");
+  }
+
+  return response.json();
+}
+
+export async function playTrack(
+  accessToken: string,
+  trackUri: string,
+  deviceId?: string,
+) {
+  const url = deviceId 
+    ? `${SPOTIFY_API_BASE}/me/player/play?device_id=${deviceId}`
+    : `${SPOTIFY_API_BASE}/me/player/play`;
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ uris: [trackUri] }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to play track");
+  }
+
+  return response.json();
+}
+
+export async function playPlaylist(
+  accessToken: string,
+  playlistUri: string,
+  deviceId?: string,
+) {
+  const url = deviceId 
+    ? `${SPOTIFY_API_BASE}/me/player/play?device_id=${deviceId}`
+    : `${SPOTIFY_API_BASE}/me/player/play`;
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ context_uri: playlistUri }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to play playlist");
+  }
+
+  return response.json();
+}
+
+export async function pausePlayback(accessToken: string, deviceId?: string) {
+  const url = deviceId 
+    ? `${SPOTIFY_API_BASE}/me/player/pause?device_id=${deviceId}`
+    : `${SPOTIFY_API_BASE}/me/player/pause`;
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to pause playback");
+  }
+
+  return response.json();
+}
+
+export async function transferPlayback(
+  accessToken: string,
+  deviceIds: string[],
+  play = false,
+) {
+  const response = await fetch(`${SPOTIFY_API_BASE}/me/player`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      device_ids: deviceIds,
+      play,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to transfer playback");
   }
 
   return response.json();
