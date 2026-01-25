@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Music, LogOut, Search, ListMusic, Menu, X } from "lucide-react";
+import { Music, LogOut, Search, ListMusic, Menu, X, Activity } from "lucide-react";
 
 export function Header() {
   const { user, isLoading, isAuthenticated } = useSession();
@@ -30,21 +30,22 @@ export function Header() {
   const navLinks = [
     { href: "/search", label: "Search", icon: Search },
     { href: "/playlists", label: "Playlists", icon: ListMusic },
+    { href: "/tap-tempo", label: "Tap Tempo", icon: Activity },
   ];
 
   return (
     <>
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-<div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-spotify flex items-center justify-center">
-            <Music className="w-4 h-4 sm:w-5 sm:h-5 text-card" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-spotify flex items-center justify-center">
+              <Music className="w-4 h-4 sm:w-5 sm:h-5 text-card" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">BPM Finder</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">Search by tempo</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg sm:text-xl font-semibold text-foreground">BPM Finder</h1>
-            <p className="text-xs text-muted-foreground hidden sm:block">Search by tempo</p>
-          </div>
-        </div>
 
           {/* Desktop Navigation */}
           {isAuthenticated && (
@@ -56,11 +57,10 @@ export function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                    }`}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
+                      ? "bg-accent text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     {link.label}
@@ -84,7 +84,7 @@ export function Header() {
               >
                 {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 h-8 sm:h-10 px-2 sm:px-3">
@@ -127,11 +127,10 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors w-full ${
-                    isActive
-                      ? "bg-accent text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors w-full ${isActive
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   {link.label}
