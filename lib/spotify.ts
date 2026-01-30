@@ -385,3 +385,20 @@ export async function getPlaybackState(accessToken: string) {
 
   return data;
 }
+
+export async function pausePlayback(accessToken: string) {
+  const response = await fetch(`${SPOTIFY_API_BASE}/me/player/pause`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  // 204 No Content is success
+  if (!response.ok && response.status !== 204) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || "Failed to pause playback");
+  }
+
+  return { success: true };
+}

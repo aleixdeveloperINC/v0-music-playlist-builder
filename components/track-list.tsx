@@ -1,7 +1,6 @@
 "use client";
 
 import type { Track } from "@/lib/types";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PlayButton } from "@/components/ui/play-button";
@@ -13,6 +12,7 @@ import {
   ArrowUp,
   ArrowDown,
   GripVertical,
+  Play,
 } from "lucide-react";
 import Image from "next/image";
 import { X } from "lucide-react";
@@ -44,6 +44,8 @@ interface TrackListProps {
   playlistId?: string;
   onReorder?: (activeId: string, overId: string) => void;
   enableDragDrop?: boolean;
+  onPlayTrack?: (trackUri: string, trackIndex: number) => void;
+  currentlyPlayingTrackId?: string | null;
 }
 
 function formatDuration(ms: number) {
@@ -172,16 +174,28 @@ function SortIcon({
   );
 }
 
+const PlayingBars = ({ className }: { className?: string }) => (
+  <div className={cn("flex items-end gap-[2px] h-4 justify-center py-0.5", className)}>
+    <div className="playing-bar w-[3px]" />
+    <div className="playing-bar w-[3px]" />
+    <div className="playing-bar w-[3px]" />
+    <div className="playing-bar w-[3px]" />
+  </div>
+);
+
 interface SortableRowProps {
   track: Track;
+  trackIndex: number;
   selectedTracks: Set<string>;
   onToggleTrack: (trackId: string) => void;
   onFetchAudioFeatures?: (trackId: string) => void;
   onRemoveTracks?: (trackIds: string[]) => void;
+  onPlayTrack?: (trackUri: string, trackIndex: number) => void;
   enableDragDrop: boolean;
+  isPlaying?: boolean;
 }
 
-function SortableRow({ track, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks, enableDragDrop }: SortableRowProps) {
+function SortableRow({ track, trackIndex, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks, onPlayTrack, enableDragDrop, isPlaying }: SortableRowProps) {
   const {
     attributes,
     listeners,
@@ -211,12 +225,13 @@ function SortableRow({ track, selectedTracks, onToggleTrack, onFetchAudioFeature
         "transition-all duration-200 cursor-pointer group relative",
         "hover:bg-accent/30",
         selectedTracks.has(track.id) && "bg-spotify/10",
+        isPlaying && "bg-spotify/10",
         isDragging && "opacity-50"
       )}
     >
-      {enableDragDrop && (
+      {enableDragDrop ? (
         <td key={`${track.id}-drag-handle`} className="px-2 py-2 sm:px-3 sm:py-3 w-8 relative">
-          {selectedTracks.has(track.id) && (
+          {(selectedTracks.has(track.id) || isPlaying) && (
             <div className="absolute left-0 top-1 bottom-1 w-1 bg-spotify rounded-full" />
           )}
           <Button
@@ -230,12 +245,31 @@ function SortableRow({ track, selectedTracks, onToggleTrack, onFetchAudioFeature
             <GripVertical className="w-4 h-4 flex-shrink-0" />
           </Button>
         </td>
+      ) : (
+        <td key={`${track.id}-drag-handle`} className="w-1 p-0 relative">
+          {(selectedTracks.has(track.id) || isPlaying) && (
+            <div className="absolute left-0 top-1 bottom-1 w-1 bg-spotify rounded-full" />
+          )}
+        </td>
       )}
 
-      {!enableDragDrop && (
-        <td className="w-1 p-0 relative">
-          {selectedTracks.has(track.id) && (
-            <div className="absolute left-0 top-1 bottom-1 w-1 bg-spotify rounded-full" />
+      {/* Play Button / Playing Indicator */}
+      {onPlayTrack && (
+        <td key={`${track.id}-play-indicator`} className="px-2 py-2 sm:px-3 sm:py-3 w-10 text-center">
+          {isPlaying ? (
+            <PlayingBars />
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-spotify hover:bg-spotify/10 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPlayTrack(track.uri, trackIndex);
+              }}
+            >
+              <Play className="h-4 w-4" />
+            </Button>
           )}
         </td>
       )}
@@ -383,6 +417,8 @@ export function TrackList({
   onRemoveTracks,
   onReorder,
   enableDragDrop = false,
+  onPlayTrack,
+  currentlyPlayingTrackId,
 }: TrackListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -419,6 +455,11 @@ export function TrackList({
 
             {!enableDragDrop && (
               <th className="w-1 p-0" />
+            )}
+            {onPlayTrack && (
+              <th className="px-2 py-1 sm:px-3 sm:py-2 w-10">
+                <span className="sr-only">Play</span>
+              </th>
             )}
             <TableHeader
               label="Tempo"
@@ -495,28 +536,34 @@ export function TrackList({
               items={tracks.map((track) => track.id)}
               strategy={verticalListSortingStrategy}
             >
-              {tracks.map((track) => (
+              {tracks.map((track, index) => (
                 <SortableRow
                   key={track.id}
                   track={track}
+                  trackIndex={index}
                   selectedTracks={selectedTracks}
                   onToggleTrack={onToggleTrack}
                   onFetchAudioFeatures={onFetchAudioFeatures}
                   onRemoveTracks={onRemoveTracks}
+                  onPlayTrack={onPlayTrack}
                   enableDragDrop={enableDragDrop}
+                  isPlaying={currentlyPlayingTrackId === track.id}
                 />
               ))}
             </SortableContext>
           ) : (
-            tracks.map((track) => (
+            tracks.map((track, index) => (
               <SortableRow
                 key={track.id}
                 track={track}
+                trackIndex={index}
                 selectedTracks={selectedTracks}
                 onToggleTrack={onToggleTrack}
                 onFetchAudioFeatures={onFetchAudioFeatures}
                 onRemoveTracks={onRemoveTracks}
+                onPlayTrack={onPlayTrack}
                 enableDragDrop={enableDragDrop}
+                isPlaying={currentlyPlayingTrackId === track.id}
               />
             ))
           )}
