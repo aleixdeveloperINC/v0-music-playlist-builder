@@ -266,7 +266,7 @@ function SortableRow({ track, trackIndex, selectedTracks, onToggleTrack, onFetch
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-spotify hover:bg-spotify/10 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-spotify hover:bg-spotify/10 cursor-pointer opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.stopPropagation();
                 onPlayTrack(track.uri, trackIndex);
