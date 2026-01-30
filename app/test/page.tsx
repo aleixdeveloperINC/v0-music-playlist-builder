@@ -8,7 +8,8 @@ export default function CatalogPage() {
     const { toast } = useToast();
     // Sample data for demonstrations
 
-    const [playbackState, setPlaybackState] = useState(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [playbackState, setPlaybackState] = useState<any>(null);
 
     const handleGetPlaybackState = async () => {
         //fetch read playback state
@@ -29,7 +30,7 @@ export default function CatalogPage() {
                 contextUri: playbackState?.context?.uri,
             }),
         })
-        const data = await response.json();
+        await response.json();
     };
 
 

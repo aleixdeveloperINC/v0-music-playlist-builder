@@ -23,12 +23,16 @@ interface SearchPanelProps {
   onAddToPlaylist: (playlistId: string, tracks: Track[]) => Promise<void>;
   onCreatePlaylist: () => void;
   onPlaylistsUpdate: () => void;
+  onPlayTrack?: (trackUri: string, trackIndex?: number) => void;
+  isPlaybackLoading?: boolean;
 }
 
 export function SearchPanel({
   playlists,
   onAddToPlaylist,
   onCreatePlaylist,
+  onPlayTrack,
+  isPlaybackLoading = false,
 }: SearchPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -286,6 +290,8 @@ export function SearchPanel({
                 onToggleTrack={handleToggleTrack}
                 onFetchAudioFeatures={handleFetchAudioFeatures}
                 enableDragDrop={false}
+                onPlayTrack={onPlayTrack}
+                isPlaybackLoading={isPlaybackLoading}
               />
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">

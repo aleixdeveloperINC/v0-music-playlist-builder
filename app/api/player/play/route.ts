@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getPlaybackState, startPlayback } from "@/lib/spotify";
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const cookieStore = await cookies();
         const sessionCookie = cookieStore.get("spotify_session")?.value;
@@ -15,10 +15,11 @@ export async function GET(request: Request) {
         const playbackState = await getPlaybackState(session.accessToken);
         console.log("DEBUG PLAYBACK STATE 2", playbackState);
         return NextResponse.json(playbackState);
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to get playback state";
         console.error("Playback error:", error);
         return NextResponse.json(
-            { error: error.message || "Failed to get playback state" },
+            { error: errorMessage },
             { status: 500 },
         );
     }
@@ -55,11 +56,12 @@ export async function POST(request: Request) {
             });
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to start playback";
         console.error("Playback error:", error);
 
         // Handle specific Spotify API errors
-        if (error.message?.includes("No active device")) {
+        if (errorMessage.includes("No active device")) {
             return NextResponse.json(
                 {
                     error: "No active device found. Please open Spotify on any device and try again.",
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
             );
         }
 
-        if (error.message?.includes("Premium required")) {
+        if (errorMessage.includes("Premium required")) {
             return NextResponse.json(
                 {
                     error: "Spotify Premium is required to control playback.",
@@ -80,7 +82,7 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json(
-            { error: error.message || "Failed to start playback" },
+            { error: errorMessage },
             { status: 500 },
         );
     }

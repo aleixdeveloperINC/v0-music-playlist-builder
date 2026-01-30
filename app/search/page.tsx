@@ -11,6 +11,7 @@ export default function SearchPage() {
   const { toast } = useToast();
   const { isAuthenticated } = useSession();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [isPlaybackLoading, setIsPlaybackLoading] = useState(false);
 
   const fetchPlaylists = useCallback(async () => {
     try {
@@ -27,10 +28,44 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPlaylists();
     }
   }, [isAuthenticated, fetchPlaylists]);
+
+  const handlePlayTrack = useCallback(async (trackUri: string) => {
+    setIsPlaybackLoading(true);
+    try {
+      const response = await fetch("/api/player/play", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uris: [trackUri],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to start playback");
+      }
+
+      toast({
+        title: "Now Playing",
+        description: "Preview track started",
+        variant: "success",
+      });
+    } catch (error: unknown) {
+      console.error("Playback error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to start playback";
+      toast({
+        title: "Playback Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPlaybackLoading(false);
+    }
+  }, [toast]);
 
   const handleAddToPlaylist = useCallback(
     async (playlistId: string, tracksToAdd: Track[]) => {
@@ -105,6 +140,8 @@ export default function SearchPage() {
             // TODO: Implement create playlist functionality
           }}
           onPlaylistsUpdate={fetchPlaylists}
+          onPlayTrack={handlePlayTrack}
+          isPlaybackLoading={isPlaybackLoading}
         />
       </main>
     </div>

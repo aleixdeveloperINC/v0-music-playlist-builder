@@ -333,7 +333,11 @@ export async function startPlayback(
     offset?: { position?: number; uri?: string };
   } = {},
 ) {
-  const body: any = {};
+  const body: {
+    context_uri?: string;
+    uris?: string[];
+    offset?: { position?: number; uri?: string };
+  } = {};
 
   if (options.contextUri) {
     body.context_uri = options.contextUri;

@@ -1,11 +1,10 @@
-import type { Playlist } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Music, Clock, ListMusic } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { PlayButton } from "@/components/ui/play-button";
 
-type PlaylistLinkItemProps = {
+interface PlaylistLinkItemProps {
     id: string;
     name: string;
     trackCount: number;

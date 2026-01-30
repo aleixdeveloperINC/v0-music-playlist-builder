@@ -44,8 +44,9 @@ interface TrackListProps {
   playlistId?: string;
   onReorder?: (activeId: string, overId: string) => void;
   enableDragDrop?: boolean;
-  onPlayTrack?: (trackUri: string, trackIndex: number) => void;
+  onPlayTrack?: (trackUri: string, trackIndex?: number) => void;
   currentlyPlayingTrackId?: string | null;
+  isPlaybackLoading?: boolean;
 }
 
 function formatDuration(ms: number) {
@@ -190,12 +191,13 @@ interface SortableRowProps {
   onToggleTrack: (trackId: string) => void;
   onFetchAudioFeatures?: (trackId: string) => void;
   onRemoveTracks?: (trackIds: string[]) => void;
-  onPlayTrack?: (trackUri: string, trackIndex: number) => void;
+  onPlayTrack?: (trackUri: string, trackIndex?: number) => void;
   enableDragDrop: boolean;
   isPlaying?: boolean;
+  isPlaybackLoading?: boolean;
 }
 
-function SortableRow({ track, trackIndex, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks, onPlayTrack, enableDragDrop, isPlaying }: SortableRowProps) {
+function SortableRow({ track, trackIndex, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks, onPlayTrack, enableDragDrop, isPlaying, isPlaybackLoading }: SortableRowProps) {
   const {
     attributes,
     listeners,
@@ -258,6 +260,8 @@ function SortableRow({ track, trackIndex, selectedTracks, onToggleTrack, onFetch
         <td key={`${track.id}-play-indicator`} className="px-2 py-2 sm:px-3 sm:py-3 w-10 text-center">
           {isPlaying ? (
             <PlayingBars />
+          ) : isPlaybackLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-spotify" />
           ) : (
             <Button
               variant="ghost"
@@ -419,6 +423,7 @@ export function TrackList({
   enableDragDrop = false,
   onPlayTrack,
   currentlyPlayingTrackId,
+  isPlaybackLoading = false,
 }: TrackListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -548,6 +553,7 @@ export function TrackList({
                   onPlayTrack={onPlayTrack}
                   enableDragDrop={enableDragDrop}
                   isPlaying={currentlyPlayingTrackId === track.id}
+                  isPlaybackLoading={isPlaybackLoading}
                 />
               ))}
             </SortableContext>
@@ -564,6 +570,7 @@ export function TrackList({
                 onPlayTrack={onPlayTrack}
                 enableDragDrop={enableDragDrop}
                 isPlaying={currentlyPlayingTrackId === track.id}
+                isPlaybackLoading={isPlaybackLoading}
               />
             ))
           )}

@@ -67,8 +67,8 @@ export function PlayButton({
             }
 
             onPlaySuccess?.();
-        } catch (err: any) {
-            const errorMessage = err.message || "Failed to play";
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to play";
             setError(errorMessage);
             onPlayError?.(errorMessage);
             toast({

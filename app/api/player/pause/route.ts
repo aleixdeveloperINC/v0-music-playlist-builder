@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { pausePlayback } from "@/lib/spotify";
 
-export async function PUT(_request: Request) {
+export async function PUT() {
     try {
         const cookieStore = await cookies();
         const sessionCookie = cookieStore.get("spotify_session")?.value;
@@ -15,11 +15,12 @@ export async function PUT(_request: Request) {
         await pausePlayback(session.accessToken);
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to pause playback";
         console.error("Pause error:", error);
 
         // Handle specific Spotify API errors
-        if (error.message?.includes("No active device")) {
+        if (errorMessage.includes("No active device")) {
             return NextResponse.json(
                 {
                     error: "No active device found. Please open Spotify on any device and try again.",
@@ -29,7 +30,7 @@ export async function PUT(_request: Request) {
             );
         }
 
-        if (error.message?.includes("Premium required")) {
+        if (errorMessage.includes("Premium required")) {
             return NextResponse.json(
                 {
                     error: "Spotify Premium is required to control playback.",
@@ -40,7 +41,7 @@ export async function PUT(_request: Request) {
         }
 
         return NextResponse.json(
-            { error: error.message || "Failed to pause playback" },
+            { error: errorMessage },
             { status: 500 },
         );
     }

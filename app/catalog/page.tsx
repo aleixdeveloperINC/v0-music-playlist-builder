@@ -1,11 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
-import type { Playlist } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, Play, Clock, TrendingUp, Heart, MoreVertical, Share2, ListMusic, Grid3x3, LayoutGrid } from "lucide-react";
-import { PlaylistLinkItem } from "@/components/ui/molecules/PlaylistLinkItem";
+import { Plus, Music, Play, Clock, TrendingUp, Heart, MoreVertical, Share2, ListMusic } from "lucide-react";
 
 export default function CatalogPage() {
     // Sample data for demonstrations
@@ -231,7 +228,7 @@ export default function CatalogPage() {
                                             <div className="text-xs text-muted-foreground">Duration</div>
                                         </div>
                                         <div className="text-center p-3 rounded-lg bg-muted/50">
-                                            <div className="text-lg font-bold text-foreground">{Math.floor(Math.random() * 500)}</div>
+                                            <div className="text-lg font-bold text-foreground">1.2k</div>
                                             <div className="text-xs text-muted-foreground">Plays</div>
                                         </div>
                                     </div>

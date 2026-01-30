@@ -3,9 +3,7 @@
 import type { Playlist } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Plus, Music } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { Plus } from "lucide-react";
 import { PlaylistLinkItem } from "./ui/molecules/PlaylistLinkItem";
 
 interface PlaylistSelectorProps {
