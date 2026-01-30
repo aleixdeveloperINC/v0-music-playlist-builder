@@ -9,6 +9,7 @@ const SCOPES = [
   "streaming", // ?
   "user-read-private",
   "user-read-email",
+  "user-read-playback-state",
   "user-modify-playback-state", // Control playback on user's devices
   "playlist-read-private",
   "playlist-read-collaborative",
@@ -137,7 +138,7 @@ export async function getUserProfile(accessToken: string) {
   return response.json();
 }
 
-export async function getUserPlaylists(accessToken: string, limit = 50) {
+export async function getUserPlaylists(accessToken: string, limit = 20) {
   const response = await fetch(
     `${SPOTIFY_API_BASE}/me/playlists?limit=${limit}`,
     {
@@ -362,4 +363,25 @@ export async function startPlayback(
   }
 
   return { success: true };
+}
+
+
+export async function getPlaybackState(accessToken: string) {
+
+  const response = await fetch(`${SPOTIFY_API_BASE}/me/player`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to get playback state");
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  const data = await response.json();
+
+
+  return data;
 }

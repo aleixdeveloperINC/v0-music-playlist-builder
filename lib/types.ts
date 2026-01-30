@@ -20,6 +20,8 @@ export interface Playlist {
   image?: string;
   trackCount: number;
   ownerId: string;
+  isPlaying: boolean;
+  uri: string;
 }
 
 export interface User {

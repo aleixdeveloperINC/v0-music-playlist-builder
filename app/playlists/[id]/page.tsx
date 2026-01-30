@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getPlaylist, getReccobeatsAudioFeatures } from "@/lib/spotify";
+import { getPlaylist, getReccobeatsAudioFeatures, getPlaybackState } from "@/lib/spotify";
 import { PlaylistDetailClient } from "./PlaylistDetailClient";
 import type { Playlist, Track } from "@/lib/types";
 import { redirect } from "next/navigation";
@@ -64,7 +64,13 @@ export default async function PlaylistDetailPage({
 
   try {
     const session = JSON.parse(sessionCookie);
-    const playlistData = await getPlaylist(session.accessToken, id);
+    const [playlistData, playbackState] = await Promise.all([
+      getPlaylist(session.accessToken, id),
+      getPlaybackState(session.accessToken).catch(() => null),
+    ]);
+
+    const playlistUri = `spotify:playlist:${id}`;
+    const isCurrentlyPlaying = playbackState?.context?.uri === playlistUri && playbackState?.is_playing;
 
     const playlistInfo: Playlist = {
       id: playlistData.id,
@@ -73,6 +79,8 @@ export default async function PlaylistDetailPage({
       image: playlistData.images?.[0]?.url,
       trackCount: playlistData.tracks?.total,
       ownerId: playlistData.owner?.id,
+      isPlaying: isCurrentlyPlaying,
+      uri: playlistUri,
     };
 
     const tracks: TrackWithoutFeatures[] = playlistData.tracks.items
@@ -176,6 +184,7 @@ export default async function PlaylistDetailPage({
         initialPlaylist={null}
         initialTracks={[]}
         playlistId={id}
+
       />
     );
   }

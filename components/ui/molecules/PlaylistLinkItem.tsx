@@ -12,25 +12,39 @@ type PlaylistLinkItemProps = {
     image?: string;
     index?: number;
     duration?: string;
+    isPlaying?: boolean;
+    onPlaySuccess?: () => void;
 }
 
-export const PlaylistLinkItem = ({ id, name, trackCount, image, index, duration = "2h 15m" }: PlaylistLinkItemProps) => {
+const PlayingBars = ({ className }: { className?: string }) => (
+    <div className={cn("flex items-end gap-[2px] h-4 justify-center py-0.5", className)}>
+        <div className="playing-bar w-[3px]" />
+        <div className="playing-bar w-[3px]" />
+        <div className="playing-bar w-[3px]" />
+        <div className="playing-bar w-[3px]" />
+    </div>
+);
+
+export const PlaylistLinkItem = ({ id, name, trackCount, image, index, onPlaySuccess, duration = "2h 15m", isPlaying = false }: PlaylistLinkItemProps) => {
     return (
         <div
             className={cn(
                 "group flex items-center gap-4 p-4 rounded-xl transition-all duration-300",
-                "hover:bg-gradient-to-r hover:from-spotify/10 hover:to-transparent",
-                "border border-transparent hover:border-spotify/30"
+                "hover:bg-accent/50",
+                isPlaying ? "bg-spotify/10 border-spotify/20" : "bg-card/50 backdrop-blur-sm border-transparent",
+                "border hover:border-spotify/30"
             )}
         >
-            {/* Index number (optional) */}
-            {index !== undefined && (
-                <div className="w-8 text-center">
+            {/* Index number or Playing Animation */}
+            <div className="w-8 text-center flex items-center justify-center">
+                {isPlaying ? (
+                    <PlayingBars />
+                ) : index !== undefined ? (
                     <span className="text-muted-foreground group-hover:text-spotify font-semibold transition-colors duration-300">
                         {index}
                     </span>
-                </div>
-            )}
+                ) : null}
+            </div>
 
             {/* Album/Playlist Image with Play Button */}
             <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-spotify/20 to-purple-500/20 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-300 shrink-0">
@@ -52,6 +66,7 @@ export const PlaylistLinkItem = ({ id, name, trackCount, image, index, duration 
                         variant="ghost"
                         size="icon"
                         className="text-white hover:text-white hover:bg-transparent h-8 w-8"
+                        onPlaySuccess={onPlaySuccess}
                     />
                 </div>
             </div>
@@ -59,7 +74,10 @@ export const PlaylistLinkItem = ({ id, name, trackCount, image, index, duration 
             {/* Playlist Info - Wrapped in Link for navigation */}
             <Link href={`/playlists/${id}`} className="flex-1 min-w-0">
                 <div>
-                    <h3 className="font-semibold text-foreground group-hover:text-spotify transition-colors duration-300 truncate">
+                    <h3 className={cn(
+                        "font-semibold transition-colors duration-300 truncate",
+                        isPlaying ? "text-spotify" : "text-foreground group-hover:text-spotify"
+                    )}>
                         {name}
                     </h3>
                     <div className="flex items-center gap-3 mt-1">

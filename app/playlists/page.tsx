@@ -1,50 +1,50 @@
-"use client";
-
-import { useState, useCallback, useEffect } from "react";
-import { useSession } from "@/hooks/use-session";
-import { Header } from "@/components/header";
-import { PlaylistPanel } from "@/components/playlist-panel";
+import { cookies } from "next/headers";
+import { getPlaybackState, getUserPlaylists } from "@/lib/spotify";
+import PlaylistsClient from "./PlaylistsClient";
+import { redirect } from "next/navigation";
 import type { Playlist } from "@/lib/types";
 
-export default function PlaylistsPage() {
-  const { isAuthenticated } = useSession();
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+export default async function PlaylistsPage() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("spotify_session")?.value;
 
-  const fetchPlaylists = useCallback(async () => {
-    setIsLoadingPlaylists(true);
-    try {
-      const response = await fetch("/api/playlists");
-      const data = await response.json();
-      if (data.playlists) {
-        setPlaylists(data.playlists);
-      }
-    } catch (error) {
-      console.error("Failed to fetch playlists:", error);
-    } finally {
-      setIsLoadingPlaylists(false);
-    }
-  }, []);
+  if (!sessionCookie) {
+    redirect("/api/auth/login");
+  }
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchPlaylists();
-    }
-  }, [isAuthenticated, fetchPlaylists]);
+  let playlists: Playlist[] = [];
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-6">
-        <PlaylistPanel
-          playlists={playlists}
-          isLoading={isLoadingPlaylists}
-          onPlaylistsUpdate={fetchPlaylists}
-          isCreateDialogOpen={isCreateDialogOpen}
-          setIsCreateDialogOpen={setIsCreateDialogOpen}
-        />
-      </main>
-    </div>
-  );
+  try {
+    const session = JSON.parse(sessionCookie);
+    const playlistsData = await getUserPlaylists(session.accessToken);
+    const playbackState = await getPlaybackState(session.accessToken);
+
+
+    const contextUri = playbackState?.context?.uri
+    const isPlayingAny = playbackState?.is_playing
+
+    playlists = playlistsData.items.map(
+      (p: {
+        id: string;
+        name: string;
+        description: string;
+        images: { url: string }[];
+        tracks: { total: number };
+        owner: { id: string };
+        uri: string;
+      }) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        image: p.images?.[0]?.url,
+        trackCount: p.tracks?.total,
+        ownerId: p.owner.id,
+        isPlaying: isPlayingAny && contextUri === p.uri,
+      }),
+    );
+  } catch (error) {
+    console.error("Failed to fetch playlists in SSR:", error);
+  }
+
+  return <PlaylistsClient initialPlaylists={playlists} />;
 }

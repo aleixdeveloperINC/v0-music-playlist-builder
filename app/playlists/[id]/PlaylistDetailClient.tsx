@@ -5,7 +5,7 @@ import { useSession } from "@/hooks/use-session";
 import { Header } from "@/components/header";
 import { TrackList } from "@/components/track-list";
 import type { Playlist, Track } from "@/lib/types";
-import { Loader2, ArrowLeft, Plus, Check, Music } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Check, Music, Disc3 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -305,7 +305,15 @@ export function PlaylistDetailClient({
                 </div>
               )}
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Playlist</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm text-muted-foreground">Playlist</p>
+                  {playlist.isPlaying && (
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-spotify/10 border border-spotify/20">
+                      <Disc3 className="w-3 h-3 text-spotify animate-spin" style={{ animationDuration: '3s' }} />
+                      <span className="text-xs font-medium text-spotify">Now Playing</span>
+                    </div>
+                  )}
+                </div>
                 <h1 className="text-2xl font-bold text-foreground">
                   {playlist.name}
                 </h1>
@@ -374,7 +382,6 @@ export function PlaylistDetailClient({
               tracks={sortedTracks}
               selectedTracks={selectedTracks}
               onToggleTrack={handleToggleTrack}
-              showCheckboxes={true}
               sortColumn={sortColumn}
               sortDirection={sortDirection}
               onSort={handleSort}

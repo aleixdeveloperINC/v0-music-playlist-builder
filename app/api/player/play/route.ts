@@ -1,18 +1,39 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { startPlayback } from "@/lib/spotify";
+import { getPlaybackState, startPlayback } from "@/lib/spotify";
+
+export async function GET(request: Request) {
+    try {
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get("spotify_session")?.value;
+
+        if (!sessionCookie) {
+            return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+        }
+
+        const session = JSON.parse(sessionCookie);
+        const playbackState = await getPlaybackState(session.accessToken);
+        console.log("DEBUG PLAYBACK STATE 2", playbackState);
+        return NextResponse.json(playbackState);
+    } catch (error: any) {
+        console.error("Playback error:", error);
+        return NextResponse.json(
+            { error: error.message || "Failed to get playback state" },
+            { status: 500 },
+        );
+    }
+}
+
 
 export async function POST(request: Request) {
     try {
         const cookieStore = await cookies();
-        const accessToken = cookieStore.get("spotify_access_token")?.value;
+        const sessionCookie = cookieStore.get("spotify_session")?.value;
 
-        if (!accessToken) {
-            return NextResponse.json(
-                { error: "Not authenticated" },
-                { status: 401 },
-            );
+        if (!sessionCookie) {
+            return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
         }
+
 
         const body = await request.json();
         const { contextUri, uris, offset } = body;
@@ -24,12 +45,14 @@ export async function POST(request: Request) {
                 { status: 400 },
             );
         }
-
-        await startPlayback(accessToken, {
-            contextUri,
-            uris,
-            offset,
-        });
+        const session = JSON.parse(sessionCookie);
+        await startPlayback(
+            session.accessToken,
+            {
+                contextUri,
+                uris,
+                offset,
+            });
 
         return NextResponse.json({ success: true });
     } catch (error: any) {

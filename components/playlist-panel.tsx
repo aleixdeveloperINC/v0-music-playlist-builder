@@ -23,6 +23,7 @@ interface PlaylistPanelProps {
   onPlaylistsUpdate: () => void;
   isCreateDialogOpen: boolean;
   setIsCreateDialogOpen: (open: boolean) => void;
+  onPlaySuccess?: () => void;
 }
 
 export function PlaylistPanel({
@@ -31,6 +32,7 @@ export function PlaylistPanel({
   onPlaylistsUpdate,
   isCreateDialogOpen,
   setIsCreateDialogOpen,
+  onPlaySuccess
 }: PlaylistPanelProps) {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -77,6 +79,7 @@ export function PlaylistPanel({
               playlists={playlists}
               onCreatePlaylist={() => setIsCreateDialogOpen(true)}
               isLoading={isLoading}
+              onPlaySuccess={onPlaySuccess}
             />
           </CardContent>
         </Card>

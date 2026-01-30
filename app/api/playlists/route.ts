@@ -27,6 +27,7 @@ export async function GET() {
           images: { url: string }[];
           tracks: { total: number };
           owner: { id: string };
+          uri: string;
         }) => ({
           id: p.id,
           name: p.name,
@@ -34,6 +35,7 @@ export async function GET() {
           image: p.images?.[0]?.url,
           trackCount: p.tracks?.total,
           ownerId: p.owner.id,
+          uri: p.uri,
         }),
       ),
     });

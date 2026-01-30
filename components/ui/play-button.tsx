@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Loader2, AlertCircle } from "lucide-react";
+import { Play, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlayButtonProps {
     /** Spotify URI for playlist, album, or artist context */
@@ -37,14 +38,15 @@ export function PlayButton({
     onPlaySuccess,
     onPlayError,
 }: PlayButtonProps) {
-    const [isPlaying, setIsPlaying] = useState(false);
+    const { toast } = useToast();
     const [error, setError] = useState<string | null>(null);
+
+
 
     const handlePlay = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
-        setIsPlaying(true);
         setError(null);
 
         try {
@@ -69,24 +71,26 @@ export function PlayButton({
             const errorMessage = err.message || "Failed to play";
             setError(errorMessage);
             onPlayError?.(errorMessage);
+            toast({
+                title: "Error",
+                description: errorMessage,
+                variant: "warning",
+            });
             console.error("Playback error:", err);
         } finally {
-            setIsPlaying(false);
         }
     };
 
+
     const buttonContent = (
         <>
-            {isPlaying ? (
-                <Loader2 className={cn("w-4 h-4 animate-spin", showLabel && "mr-2")} />
-            ) : error ? (
+            {error ? (
                 <AlertCircle className={cn("w-4 h-4", showLabel && "mr-2")} />
             ) : (
                 <Play className={cn("w-4 h-4 fill-current", showLabel && "mr-2")} />
             )}
             {showLabel && (
                 <span>
-                    {isPlaying ? "Playing..." : error ? "Error" : "Play"}
                 </span>
             )}
         </>
@@ -103,8 +107,6 @@ export function PlayButton({
                 className,
             )}
             onClick={handlePlay}
-            disabled={isPlaying}
-            title={error || "Play on Spotify"}
         >
             {buttonContent}
         </Button>

@@ -174,7 +174,6 @@ function SortIcon({
 
 interface SortableRowProps {
   track: Track;
-  showCheckboxes: boolean;
   selectedTracks: Set<string>;
   onToggleTrack: (trackId: string) => void;
   onFetchAudioFeatures?: (trackId: string) => void;
@@ -182,7 +181,7 @@ interface SortableRowProps {
   enableDragDrop: boolean;
 }
 
-function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks, enableDragDrop }: SortableRowProps) {
+function SortableRow({ track, selectedTracks, onToggleTrack, onFetchAudioFeatures, onRemoveTracks, enableDragDrop }: SortableRowProps) {
   const {
     attributes,
     listeners,
@@ -207,33 +206,37 @@ function SortableRow({ track, showCheckboxes, selectedTracks, onToggleTrack, onF
       style={style}
       {...attributes}
       key={track.id}
-      onClick={() => showCheckboxes && onToggleTrack(track.id)}
+      onClick={() => onToggleTrack(track.id)}
       className={cn(
-        "transition-colors",
-        showCheckboxes && enableDragDrop && "cursor-grab hover:bg-accent",
-        selectedTracks.has(track.id) && "bg-accent/50",
+        "transition-all duration-200 cursor-pointer group relative",
+        "hover:bg-accent/30",
+        selectedTracks.has(track.id) && "bg-spotify/10",
+        isDragging && "opacity-50"
       )}
     >
       {enableDragDrop && (
-        <td key={`${track.id}-drag-handle`} className="px-2 py-2 sm:px-3 sm:py-3 w-8">
+        <td key={`${track.id}-drag-handle`} className="px-2 py-2 sm:px-3 sm:py-3 w-8 relative">
+          {selectedTracks.has(track.id) && (
+            <div className="absolute left-0 top-1 bottom-1 w-1 bg-spotify rounded-full" />
+          )}
           <Button
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
             style={{ touchAction: "none" }}
+            onClick={(e) => e.stopPropagation()}
             {...listeners}
           >
             <GripVertical className="w-4 h-4 flex-shrink-0" />
           </Button>
         </td>
       )}
-      {showCheckboxes && (
-        <td key={`${track.id}-checkbox`} className={cn("px-2 py-2 sm:px-3 sm:py-3")}>
-          <Checkbox
-            checked={selectedTracks.has(track.id)}
-            onCheckedChange={() => onToggleTrack(track.id)}
-            onClick={(e) => e.stopPropagation()}
-          />
+
+      {!enableDragDrop && (
+        <td className="w-1 p-0 relative">
+          {selectedTracks.has(track.id) && (
+            <div className="absolute left-0 top-1 bottom-1 w-1 bg-spotify rounded-full" />
+          )}
         </td>
       )}
       <AudioFeatures key={`${track.id}-audio-features`} track={track} onFetch={onFetchAudioFeatures} />
@@ -373,7 +376,6 @@ export function TrackList({
   tracks,
   selectedTracks,
   onToggleTrack,
-  showCheckboxes = true,
   onFetchAudioFeatures,
   sortColumn,
   sortDirection,
@@ -414,10 +416,9 @@ export function TrackList({
                 <span className="sr-only">Drag</span>
               </th>
             )}
-            {showCheckboxes && (
-              <th className="px-2 py-1 sm:px-3 sm:py-2 w-8">
-                <span className="sr-only">Select</span>
-              </th>
+
+            {!enableDragDrop && (
+              <th className="w-1 p-0" />
             )}
             <TableHeader
               label="Tempo"
@@ -498,7 +499,6 @@ export function TrackList({
                 <SortableRow
                   key={track.id}
                   track={track}
-                  showCheckboxes={showCheckboxes}
                   selectedTracks={selectedTracks}
                   onToggleTrack={onToggleTrack}
                   onFetchAudioFeatures={onFetchAudioFeatures}
@@ -512,7 +512,6 @@ export function TrackList({
               <SortableRow
                 key={track.id}
                 track={track}
-                showCheckboxes={showCheckboxes}
                 selectedTracks={selectedTracks}
                 onToggleTrack={onToggleTrack}
                 onFetchAudioFeatures={onFetchAudioFeatures}

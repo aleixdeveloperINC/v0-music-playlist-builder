@@ -12,12 +12,14 @@ interface PlaylistSelectorProps {
   playlists: Playlist[];
   onCreatePlaylist: () => void;
   isLoading: boolean;
+  onPlaySuccess?: () => void;
 }
 
 export function PlaylistSelector({
   playlists,
   onCreatePlaylist,
   isLoading,
+  onPlaySuccess,
 }: PlaylistSelectorProps) {
   if (isLoading) {
     return (
@@ -58,6 +60,8 @@ export function PlaylistSelector({
           trackCount={playlist.trackCount}
           image={playlist.image}
           index={index + 1}
+          isPlaying={playlist.isPlaying}
+          onPlaySuccess={onPlaySuccess}
         />
       ))}
 
