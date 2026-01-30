@@ -5,7 +5,7 @@ import { useSession } from "@/hooks/use-session";
 import { Header } from "@/components/header";
 import { TrackList } from "@/components/track-list";
 import type { Playlist, Track } from "@/lib/types";
-import { Loader2, ArrowLeft, Plus, Check, Music, Disc3 } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Check, Music, Disc3, Play, Pause } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -33,12 +33,14 @@ interface PlaylistDetailClientProps {
   initialPlaylist: Playlist | null;
   initialTracks: TrackWithoutFeatures[];
   playlistId: string;
+  initialCurrentlyPlayingTrackId: string | null;
 }
 
 export function PlaylistDetailClient({
   initialPlaylist,
   initialTracks,
   playlistId,
+  initialCurrentlyPlayingTrackId,
 }: PlaylistDetailClientProps) {
   const { toast } = useToast();
   const { isAuthenticated } = useSession();
@@ -50,6 +52,9 @@ export function PlaylistDetailClient({
   const [isAdding, setIsAdding] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof Track>();
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | undefined>(undefined);
+  const [isPlaying, setIsPlaying] = useState(initialPlaylist?.isPlaying || false);
+  const [isPlaybackLoading, setIsPlaybackLoading] = useState(false);
+  const [currentlyPlayingTrackId, setCurrentlyPlayingTrackId] = useState<string | null>(initialCurrentlyPlayingTrackId);
 
   const fetchPlaylists = useCallback(async () => {
     try {
@@ -246,6 +251,142 @@ export function PlaylistDetailClient({
     }
   }, [tracks, playlistId, toast]);
 
+  const handlePlayPlaylist = async () => {
+    if (!playlist) return;
+
+    // Optimistic update: clear currently playing track since we're starting from beginning
+    setCurrentlyPlayingTrackId(null);
+
+    setIsPlaybackLoading(true);
+    try {
+      const response = await fetch("/api/player/play", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contextUri: playlist.uri,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to start playback");
+      }
+
+      setIsPlaying(true);
+      setPlaylist((prev) => prev ? { ...prev, isPlaying: true } : null);
+
+      // Optimistic update is sufficient - don't fetch to avoid race condition with Spotify API
+      
+      toast({
+        title: "Now Playing",
+        description: `Playing "${playlist.name}"`,
+        variant: "success",
+      });
+    } catch (error: unknown) {
+      console.error("Playback error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to start playback";
+      toast({
+        title: "Playback Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPlaybackLoading(false);
+    }
+  };
+
+  const handlePausePlaylist = async () => {
+    // Optimistic update: clear currently playing track immediately
+    setCurrentlyPlayingTrackId(null);
+
+    setIsPlaybackLoading(true);
+    try {
+      const response = await fetch("/api/player/pause", {
+        method: "PUT",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to pause playback");
+      }
+
+      setIsPlaying(false);
+      setPlaylist((prev) => prev ? { ...prev, isPlaying: false } : null);
+
+      // Clear currently playing track immediately
+      setCurrentlyPlayingTrackId(null);
+
+      toast({
+        title: "Paused",
+        description: "Playback paused",
+        variant: "default",
+      });
+    } catch (error: unknown) {
+      console.error("Pause error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to pause playback";
+      toast({
+        title: "Pause Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPlaybackLoading(false);
+    }
+  };
+
+  const handlePlayTrack = async (_trackUri: string, trackIndex: number) => {
+    if (!playlist) return;
+
+    // Optimistic update: Set the currently playing track immediately
+    const playingTrack = tracks[trackIndex];
+    if (playingTrack) {
+      setCurrentlyPlayingTrackId(playingTrack.id);
+    }
+
+    setIsPlaybackLoading(true);
+    try {
+      const response = await fetch("/api/player/play", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contextUri: playlist.uri,
+          offset: { position: trackIndex },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Rollback optimistic update on error
+        setCurrentlyPlayingTrackId(null);
+        throw new Error(data.error || "Failed to start playback");
+      }
+
+      setIsPlaying(true);
+      setPlaylist((prev) => prev ? { ...prev, isPlaying: true } : null);
+      
+      // Optimistic update is sufficient - don't fetch to avoid race condition with Spotify API
+      
+      toast({
+        title: "Now Playing",
+        description: `Playing from track ${trackIndex + 1}`,
+        variant: "success",
+      });
+    } catch (error: unknown) {
+      console.error("Playback error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to start playback";
+      toast({
+        title: "Playback Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPlaybackLoading(false);
+    }
+  };
+
   const sortedTracks = useMemo(() => {
     if (!sortColumn) return tracks;
     return [...tracks].sort((a, b) => {
@@ -304,10 +445,10 @@ export function PlaylistDetailClient({
                   <Music className="w-10 h-10 text-muted-foreground" />
                 </div>
               )}
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-sm text-muted-foreground">Playlist</p>
-                  {playlist.isPlaying && (
+                  {isPlaying && (
                     <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-spotify/10 border border-spotify/20">
                       <Disc3 className="w-3 h-3 text-spotify animate-spin" style={{ animationDuration: '3s' }} />
                       <span className="text-xs font-medium text-spotify">Now Playing</span>
@@ -322,6 +463,20 @@ export function PlaylistDetailClient({
                   {tracks.length} tracks
                 </p>
               </div>
+              <Button
+                size="lg"
+                className="bg-spotify hover:bg-spotify/90 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
+                onClick={isPlaying ? handlePausePlaylist : handlePlayPlaylist}
+                disabled={isPlaybackLoading}
+              >
+                {isPlaybackLoading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : isPlaying ? (
+                  <Pause className="w-6 h-6 fill-current" />
+                ) : (
+                  <Play className="w-6 h-6 fill-current ml-1" />
+                )}
+              </Button>
             </div>
 
             {tracks.length > 0 && (
@@ -387,7 +542,9 @@ export function PlaylistDetailClient({
               onSort={handleSort}
               onRemoveTracks={handleRemoveTracks}
               onReorder={handleReorder}
+              onPlayTrack={handlePlayTrack}
               enableDragDrop={true}
+              currentlyPlayingTrackId={currentlyPlayingTrackId}
             />
           </div>
         )}

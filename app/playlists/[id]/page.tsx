@@ -71,6 +71,9 @@ export default async function PlaylistDetailPage({
 
     const playlistUri = `spotify:playlist:${id}`;
     const isCurrentlyPlaying = playbackState?.context?.uri === playlistUri && playbackState?.is_playing;
+    const initialCurrentlyPlayingTrackId = playbackState?.item?.uri 
+      ? playbackState.item.uri.split(':').pop() || null
+      : null;
 
     const playlistInfo: Playlist = {
       id: playlistData.id,
@@ -175,6 +178,7 @@ export default async function PlaylistDetailPage({
         initialPlaylist={playlistInfo}
         initialTracks={tracks}
         playlistId={id}
+        initialCurrentlyPlayingTrackId={initialCurrentlyPlayingTrackId}
       />
     );
   } catch (error) {
@@ -184,7 +188,7 @@ export default async function PlaylistDetailPage({
         initialPlaylist={null}
         initialTracks={[]}
         playlistId={id}
-
+        initialCurrentlyPlayingTrackId={null}
       />
     );
   }
